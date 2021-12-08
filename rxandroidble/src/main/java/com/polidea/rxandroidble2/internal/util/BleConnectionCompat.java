@@ -90,7 +90,7 @@ public class BleConnectionCompat {
         RxBleLog.v("Connecting without reflection");
 
         if (Build.VERSION.SDK_INT >= 23 /* Build.VERSION_CODES.M */) {
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_BREDR);
         } else {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback);
         }
