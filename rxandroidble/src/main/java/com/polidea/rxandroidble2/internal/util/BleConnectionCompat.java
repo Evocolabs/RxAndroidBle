@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import bleshadow.javax.inject.Inject;
 
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
+//import static android.bluetooth.BluetoothDevice.TRANSPORT_BREDR;
 
 public class BleConnectionCompat {
 
@@ -90,7 +91,7 @@ public class BleConnectionCompat {
         RxBleLog.v("Connecting without reflection");
 
         if (Build.VERSION.SDK_INT >= 23 /* Build.VERSION_CODES.M */) {
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_BREDR);
+            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
         } else {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback);
         }

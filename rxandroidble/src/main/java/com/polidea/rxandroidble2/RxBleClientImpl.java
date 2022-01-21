@@ -147,6 +147,29 @@ class RxBleClientImpl extends RxBleClient {
     }
 
     @Override
+    public Observable<ScanResult> scanBredrDevices(final ScanSettings scanSettings, final ScanFilter... scanFilters) {
+        return Observable.defer(new Callable<ObservableSource<? extends ScanResult>>() {
+            @Override
+            public Observable<ScanResult> call() {
+                scanPreconditionVerifier.verify(scanSettings.shouldCheckLocationProviderState());
+                final ScanSetup scanSetup = scanSetupBuilder.build(scanSettings, scanFilters);
+                final Operation<RxBleInternalScanResult> scanOperation = scanSetup.scanOperation;
+                return operationQueue.queue(scanOperation)
+                        .unsubscribeOn(bluetoothInteractionScheduler)
+                        .compose(scanSetup.scanOperationBehaviourEmulatorTransformer)
+                        .map(internalToExternalScanResultMapFunction)
+                        .doOnNext(new Consumer<ScanResult>() {
+                            @Override
+                            public void accept(ScanResult scanResult) {
+                                if (RxBleLog.getShouldLogScannedPeripherals()) RxBleLog.i("%s", scanResult);
+                            }
+                        })
+                        .mergeWith(RxBleClientImpl.this.<ScanResult>bluetoothAdapterOffExceptionObservable());
+            }
+        });
+    }
+
+    @Override
     public BackgroundScanner getBackgroundScanner() {
         return backgroundScanner;
     }

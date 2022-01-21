@@ -141,6 +141,19 @@ public abstract class RxBleClient {
     public abstract Observable<ScanResult> scanBleDevices(ScanSettings scanSettings, ScanFilter... scanFilters);
 
     /**
+     * Returns an infinite observable emitting BR/EDR scan results.
+     * Scan is automatically started and stopped based on the Observable lifecycle.
+     * Scan is started on subscribe and stopped on unsubscribe. You can safely subscribe multiple observers to this observable.
+     * <p>
+     * The library automatically handles Bluetooth adapter state changes but you are supposed to prompt the user
+     * to enable it if it is disabled
+     *
+     * @param scanSettings Scan settings
+     * @param scanFilters Filtering settings. ScanResult will be emitted if <i>any</i> of the passed scan filters will match.
+     */
+    public abstract Observable<ScanResult> scanBredrDevices(ScanSettings scanSettings, ScanFilter... scanFilters);
+
+    /**
      * Returns a background scanner instance that can be used to handle background scans, even if your process is stopped.
      */
     public abstract BackgroundScanner getBackgroundScanner();

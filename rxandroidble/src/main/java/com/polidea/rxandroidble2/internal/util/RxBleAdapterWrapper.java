@@ -7,12 +7,21 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.polidea.rxandroidble2.exceptions.BleException;
 import com.polidea.rxandroidble2.internal.RxBleLog;
+import com.polidea.rxandroidble2.internal.scan.BredrScanCallback;
+
 import java.util.List;
 import java.util.Set;
 
@@ -22,11 +31,16 @@ public class RxBleAdapterWrapper {
 
     private final BluetoothAdapter bluetoothAdapter;
 
+    private final Context context;
+
+    private BroadcastReceiver edrScanReceiver;
+
     private static BleException nullBluetoothAdapter = new BleException("bluetoothAdapter is null");
 
     @Inject
-    public RxBleAdapterWrapper(@Nullable BluetoothAdapter bluetoothAdapter) {
+    public RxBleAdapterWrapper(@Nullable BluetoothAdapter bluetoothAdapter, @ApplicationContext @NonNull Context context) {
         this.bluetoothAdapter = bluetoothAdapter;
+        this.context = context;
     }
 
     public BluetoothDevice getRemoteDevice(String macAddress) {
@@ -109,6 +123,53 @@ public class RxBleAdapterWrapper {
             return;
         }
         bluetoothLeScanner.stopScan(scanCallback);
+    }
+
+    public void startLegacyBredrScan(final BredrScanCallback scanCallback) {
+        if (bluetoothAdapter == null) {
+            throw nullBluetoothAdapter;
+        }
+        if (!bluetoothAdapter.isEnabled()) {
+            RxBleLog.w(
+                    "Cannot call BluetoothLeScanner.stopScan(ScanCallback) on 'null' reference; BluetoothAdapter.isEnabled() == %b",
+                    bluetoothAdapter.isEnabled()
+            );
+            // if stopping the scan is not possible due to BluetoothLeScanner not accessible then it is probably stopped anyway
+            return;
+        }
+        if (bluetoothAdapter.isDiscovering()) {
+            stopLegacyBredrScan();
+        }
+        edrScanReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                handleBtScanEvent(context, intent, scanCallback);
+            }
+        };
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        context.registerReceiver(edrScanReceiver, filter);
+        bluetoothAdapter.startDiscovery();
+    }
+
+    private void handleBtScanEvent(Context context, Intent intent, BredrScanCallback scanCallback) {
+        String action = intent.getAction();
+
+        if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            scanCallback.onDeviceScanned(device);
+        }
+    }
+
+    public void stopLegacyBredrScan() {
+        if (bluetoothAdapter == null) {
+            throw nullBluetoothAdapter;
+        }
+        if (bluetoothAdapter.isDiscovering()) {
+            bluetoothAdapter.cancelDiscovery();
+        }
+        if (edrScanReceiver != null) {
+            context.unregisterReceiver(edrScanReceiver);
+        }
     }
 
     public Set<BluetoothDevice> getBondedDevices() {

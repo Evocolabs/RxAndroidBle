@@ -27,7 +27,7 @@ abstract public class ScanOperation<SCAN_RESULT_TYPE, SCAN_CALLBACK_TYPE> extend
     }
 
     @Override
-    final protected void protectedRun(final ObservableEmitter<SCAN_RESULT_TYPE> emitter, QueueReleaseInterface queueReleaseInterface) {
+    protected void protectedRun(final ObservableEmitter<SCAN_RESULT_TYPE> emitter, QueueReleaseInterface queueReleaseInterface) {
 
         final SCAN_CALLBACK_TYPE scanCallback = createScanCallback(emitter);
 

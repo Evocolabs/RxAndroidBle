@@ -328,6 +328,12 @@ public class RxBleClientMock extends RxBleClient {
         return createScanOperation(scanSettings, scanFilters);
     }
 
+    @Override
+    public Observable<ScanResult> scanBredrDevices(ScanSettings scanSettings, ScanFilter... scanFilters) {
+        return null;
+    }
+
+
     @NonNull
     private Observable<ScanResult> createScanOperation(ScanSettings scanSettings, final ScanFilter... scanFilters) {
         return discoveredDevicesSubject

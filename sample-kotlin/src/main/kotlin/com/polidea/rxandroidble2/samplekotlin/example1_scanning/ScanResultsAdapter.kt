@@ -1,11 +1,13 @@
 package com.polidea.rxandroidble2.samplekotlin.example1_scanning
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.samplekotlin.example1_scanning.ScanResultsAdapter.ViewHolder
+import com.polidea.rxandroidble2.samplekotlin.util.toHex
 import com.polidea.rxandroidble2.scan.ScanResult
 
 internal class ScanResultsAdapter(
@@ -32,6 +34,10 @@ internal class ScanResultsAdapter(
                 // new device => add to data list
                 with(data) {
                     add(bleScanResult)
+                    for (res in data) {
+                        val device = res.bleDevice
+                        Log.d("ScanResultAdapter", "addScanResult: ${res.bleDevice.name}, data: ${res.scanRecord.bytes.toHex()}")
+                    }
                     sortBy { it.bleDevice.macAddress }
                 }
                 notifyDataSetChanged()
