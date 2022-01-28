@@ -15,6 +15,7 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
+import com.polidea.rxandroidble2.bredr.BredrScanResultListener;
 import com.polidea.rxandroidble2.helpers.LocationServicesOkObservable;
 import com.polidea.rxandroidble2.internal.DeviceComponent;
 import com.polidea.rxandroidble2.internal.RxBleLog;
@@ -354,6 +355,11 @@ public interface ClientComponent {
             } else {
                 return scanPreconditionVerifierForApi24.get();
             }
+        }
+
+        @Provides
+        static BredrScanResultListener provideBredrScanResultListener(Context context) {
+            return new BredrScanResultListener(context);
         }
 
         @Binds

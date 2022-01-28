@@ -2,6 +2,7 @@ package com.polidea.rxandroidble2.samplekotlin.example1_scanning
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.exceptions.BleScanException
 import com.polidea.rxandroidble2.samplekotlin.DeviceActivity
 import com.polidea.rxandroidble2.samplekotlin.R
@@ -16,9 +17,7 @@ import com.polidea.rxandroidble2.scan.ScanSettings
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import kotlinx.android.synthetic.main.activity_example1.background_scan_btn
-import kotlinx.android.synthetic.main.activity_example1.scan_results
-import kotlinx.android.synthetic.main.activity_example1.scan_toggle_btn
+import kotlinx.android.synthetic.main.activity_example1.*
 
 class ScanActivity : AppCompatActivity() {
 
@@ -34,6 +33,11 @@ class ScanActivity : AppCompatActivity() {
     private val isScanning: Boolean
         get() = scanDisposable != null
 
+    private var bredrScanDisposable: Disposable? = null
+
+    private val isBredrScanning: Boolean
+        get() = bredrScanDisposable != null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_example1)
@@ -41,6 +45,7 @@ class ScanActivity : AppCompatActivity() {
 
         background_scan_btn.setOnClickListener { startActivity(BackgroundScanActivity.newInstance(this)) }
         scan_toggle_btn.setOnClickListener { onScanToggleClick() }
+        bredr_scan_btn.setOnClickListener()
     }
 
     private fun configureResultList() {
@@ -69,6 +74,8 @@ class ScanActivity : AppCompatActivity() {
         updateButtonUIState()
     }
 
+
+
     private fun scanBleDevices(): Observable<ScanResult> {
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -76,11 +83,23 @@ class ScanActivity : AppCompatActivity() {
             .build()
 
         val scanFilter = ScanFilter.Builder()
-//            .setDeviceAddress("B4:99:4C:34:DC:8B")
-            // add custom filters if needed
             .build()
 
         return rxBleClient.scanBleDevices(scanSettings, scanFilter)
+    }
+
+    private fun onScanBredrToggleClick() {
+        if (isBredrScanning) {
+            bredrScanDisposable?.dispose()
+        } else {
+            if (rxBleClient.isScanRuntimePermissionGranted) {
+                scanBredrDevices()
+            }
+        }
+    }
+
+    private fun scanBredrDevices() {
+        rxBleClient.scanBredrDevices()
     }
 
     private fun dispose() {

@@ -11,6 +11,8 @@ import android.bluetooth.le.ScanSettings;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.polidea.rxandroidble2.bredr.BredrScanCallback;
+import com.polidea.rxandroidble2.bredr.BredrScanResultListener;
 import com.polidea.rxandroidble2.exceptions.BleException;
 import com.polidea.rxandroidble2.internal.RxBleLog;
 import java.util.List;
@@ -24,9 +26,12 @@ public class RxBleAdapterWrapper {
 
     private static BleException nullBluetoothAdapter = new BleException("bluetoothAdapter is null");
 
+    private final BredrScanResultListener bredrScanResultListener;
+
     @Inject
-    public RxBleAdapterWrapper(@Nullable BluetoothAdapter bluetoothAdapter) {
+    public RxBleAdapterWrapper(@Nullable BluetoothAdapter bluetoothAdapter, BredrScanResultListener bredrScanResultListener) {
         this.bluetoothAdapter = bluetoothAdapter;
+        this.bredrScanResultListener = bredrScanResultListener;
     }
 
     public BluetoothDevice getRemoteDevice(String macAddress) {
@@ -116,5 +121,30 @@ public class RxBleAdapterWrapper {
             throw nullBluetoothAdapter;
         }
         return bluetoothAdapter.getBondedDevices();
+    }
+
+    public void startBredrScan(BredrScanCallback scanCallback) {
+        if (bluetoothAdapter == null) {
+            throw nullBluetoothAdapter;
+        }
+        if (!bluetoothAdapter.isEnabled()) {
+            // this situation seems to be a problem since API 29
+            RxBleLog.v(
+                    "BluetoothAdapter is disabled, calling BluetoothLeScanner.stopScan(ScanCallback) may cause IllegalStateException"
+            );
+            // if stopping the scan is not possible due to BluetoothAdapter turned off then it is probably stopped anyway
+            return;
+        }
+        bredrScanResultListener.startListen(scanCallback);
+        bluetoothAdapter.startDiscovery();
+    }
+
+    public void stopBredrScan(BredrScanCallback scanCallback) {
+        if (bluetoothAdapter == null) {
+            throw nullBluetoothAdapter;
+        }
+        bluetoothAdapter.cancelDiscovery();
+        bredrScanResultListener.stopListen(scanCallback);
+
     }
 }
