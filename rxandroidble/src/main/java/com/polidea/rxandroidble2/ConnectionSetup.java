@@ -32,17 +32,24 @@ public class ConnectionSetup {
      * canceled and removed from queue.
      */
     public final Timeout operationTimeout;
+    /**
+     * Flag diecribiong if the current connection should use TRANSPORT_LE
+     */
+    public final boolean isBredr;
 
-    ConnectionSetup(boolean autoConnect, boolean suppressOperationCheck, Timeout operationTimeout) {
+
+    ConnectionSetup(boolean autoConnect, boolean suppressOperationCheck, Timeout operationTimeout, boolean isBredr) {
         this.autoConnect = autoConnect;
         this.suppressOperationCheck = suppressOperationCheck;
         this.operationTimeout = operationTimeout;
+        this.isBredr = isBredr;
     }
 
     public static class Builder {
 
         private boolean autoConnect = false;
         private boolean suppressOperationCheck = false;
+        private boolean isBredr = false;
         private Timeout operationTimeout = new Timeout(DEFAULT_OPERATION_TIMEOUT, TimeUnit.SECONDS);
 
 
@@ -77,6 +84,18 @@ public class ConnectionSetup {
         }
 
         /**
+         * @param isBredr Flag describing the method of operation viability checking. If set to false,
+         *                               a {@link BleIllegalOperationException} will be
+         *                               emitted every time properties of the characteristic don't match those required by the operation.
+         *                               If set to true, an event will be logged without interrupting the execution.
+         * @return this builder instance
+         */
+        public Builder setIsBredr(boolean isBredr) {
+            this.isBredr = isBredr;
+            return this;
+        }
+
+        /**
          * @param operationTimeout Timeout after which the operation will be considered as broken. Eventually the operation
          *                         will be canceled and removed from queue. Keep in mind that it will cancel the library's operation
          *                         only and may leave Android's BLE stack in an inconsistent state.
@@ -88,7 +107,7 @@ public class ConnectionSetup {
         }
 
         public ConnectionSetup build() {
-            return new ConnectionSetup(autoConnect, suppressOperationCheck, operationTimeout);
+            return new ConnectionSetup(autoConnect, suppressOperationCheck, operationTimeout, isBredr);
         }
     }
 }

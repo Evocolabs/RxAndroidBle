@@ -29,6 +29,7 @@ public abstract class DeviceModule {
     public static final String OPERATION_TIMEOUT = "operation-timeout";
     public static final String DISCONNECT_TIMEOUT = "disconnect-timeout";
     public static final String CONNECT_TIMEOUT = "connect-timeout";
+    public static final String IS_BREDR = "is-bredr-device";
 
     private static final int DEFAULT_OPERATION_TIMEOUT = 30;
     private static final int DEFAULT_DISCONNECT_TIMEOUT = 10;

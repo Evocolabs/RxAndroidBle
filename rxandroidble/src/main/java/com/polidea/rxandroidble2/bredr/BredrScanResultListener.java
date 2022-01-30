@@ -1,10 +1,14 @@
 package com.polidea.rxandroidble2.bredr;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+
+import com.polidea.rxandroidble2.internal.RxBleLog;
 
 import java.util.HashMap;
 
@@ -22,7 +26,8 @@ public class BredrScanResultListener {
         this.receivers = new HashMap<>();
     }
 
-    public void startListen(BredrScanCallback cb) {
+    public void startListen(final BredrScanCallback cb) {
+        RxBleLog.i("starting Bredr Scan");
         BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -31,13 +36,25 @@ public class BredrScanResultListener {
                     // Get the BluetoothDevice object from the Intent
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     // Add the name and address to an array adapter to show in a Toast
-                    String derp = device.getName() + " - " + device.getAddress();
+                    BluetoothClass btClass = intent.getParcelableExtra(BluetoothDevice.EXTRA_CLASS);
+                    int majorClass = btClass.getMajorDeviceClass();
+                    RxBleLog.i("Bredr Scan- %s, %s", device.getName(), device.getAddress());
+                    RxBleLog.i("Bluetooth Major class: %d", majorClass);
+                    // Only UnCategorized Device should be labeled as BLE device.
+                    cb.onScanned(device, majorClass == BluetoothClass.Device.Major.UNCATEGORIZED);
+                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                    cb.onScanStop();
                 }
             }
         };
-        IntentFilter ifilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        context.registerReceiver(receiver, ifilter);
+
+        IntentFilter mfilter = new IntentFilter();
+
+        mfilter.addAction(BluetoothDevice.ACTION_FOUND);
+        mfilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        context.registerReceiver(receiver, mfilter);
     }
+
     public void stopListen(BredrScanCallback cb) {
         if (receivers.containsKey(cb)) {
             context.unregisterReceiver(receivers.get(cb));

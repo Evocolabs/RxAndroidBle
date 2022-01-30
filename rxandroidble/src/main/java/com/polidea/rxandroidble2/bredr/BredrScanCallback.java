@@ -1,7 +1,9 @@
 package com.polidea.rxandroidble2.bredr;
 
-import com.polidea.rxandroidble2.RxBleDevice;
+import android.bluetooth.BluetoothDevice;
+
 
 public interface BredrScanCallback {
-    void onScanned(RxBleDevice device);
+    void onScanned(BluetoothDevice device, Boolean isBredr);
+    void onScanStop();
 }

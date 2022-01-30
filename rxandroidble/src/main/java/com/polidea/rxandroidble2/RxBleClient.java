@@ -222,4 +222,6 @@ public abstract class RxBleClient {
      * @return an ordered array of possible scan permissions
      */
     public abstract String[] getRecommendedScanRuntimePermissions();
+
+    public abstract Observable<RxBleDevice> scanBredrDevices();
 }

@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.polidea.rxandroidble2.RxBleAdapterStateObservable.BleAdapterState;
+import com.polidea.rxandroidble2.bredr.BredrScanOperation;
+import com.polidea.rxandroidble2.bredr.BredrScanResultListener;
 import com.polidea.rxandroidble2.exceptions.BleScanException;
 import com.polidea.rxandroidble2.internal.RxBleDeviceProvider;
 import com.polidea.rxandroidble2.internal.RxBleLog;
@@ -67,6 +69,7 @@ class RxBleClientImpl extends RxBleClient {
     private final Lazy<ClientStateObservable> lazyClientStateObservable;
     private final BackgroundScanner backgroundScanner;
     private final CheckerScanPermission checkerScanPermission;
+    private final BredrScanResultListener bredrScanResultListener;
 
     @Inject
     RxBleClientImpl(RxBleAdapterWrapper rxBleAdapterWrapper,
@@ -82,7 +85,8 @@ class RxBleClientImpl extends RxBleClient {
                     @Named(ClientComponent.NamedSchedulers.BLUETOOTH_INTERACTION) Scheduler bluetoothInteractionScheduler,
                     ClientComponent.ClientComponentFinalizer clientComponentFinalizer,
                     BackgroundScanner backgroundScanner,
-                    CheckerScanPermission checkerScanPermission) {
+                    CheckerScanPermission checkerScanPermission,
+                    BredrScanResultListener bredrScanResultListener) {
         this.operationQueue = operationQueue;
         this.rxBleAdapterWrapper = rxBleAdapterWrapper;
         this.rxBleAdapterStateObservable = adapterStateObservable;
@@ -97,6 +101,7 @@ class RxBleClientImpl extends RxBleClient {
         this.clientComponentFinalizer = clientComponentFinalizer;
         this.backgroundScanner = backgroundScanner;
         this.checkerScanPermission = checkerScanPermission;
+        this.bredrScanResultListener = bredrScanResultListener;
     }
 
     @Override
@@ -111,13 +116,18 @@ class RxBleClientImpl extends RxBleClient {
         return rxBleDeviceProvider.getBleDevice(macAddress);
     }
 
+    private RxBleDevice getBredrDevice(@NonNull String macAddress) {
+        guardBluetoothAdapterAvailable();
+        return rxBleDeviceProvider.getBleDevice(macAddress, true);
+    }
+
     @Override
     public Set<RxBleDevice> getBondedDevices() {
         guardBluetoothAdapterAvailable();
         Set<RxBleDevice> rxBleDevices = new HashSet<>();
         Set<BluetoothDevice> bluetoothDevices = rxBleAdapterWrapper.getBondedDevices();
         for (BluetoothDevice bluetoothDevice : bluetoothDevices) {
-            rxBleDevices.add(getBleDevice(bluetoothDevice.getAddress()));
+            rxBleDevices.add(getBredrDevice(bluetoothDevice.getAddress()));
         }
 
         return rxBleDevices;
@@ -278,5 +288,23 @@ class RxBleClientImpl extends RxBleClient {
     @Override
     public String[] getRecommendedScanRuntimePermissions() {
         return checkerScanPermission.getRecommendedScanRuntimePermissions();
+    }
+
+    @Override
+    public Observable<RxBleDevice> scanBredrDevices() {
+        final Operation<RxBleDevice> scanOperation = new BredrScanOperation(
+                rxBleAdapterWrapper,
+                bredrScanResultListener,
+                rxBleDeviceProvider);
+        return operationQueue
+                .queue(scanOperation)
+                .doOnNext(new Consumer<RxBleDevice>() {
+                    @Override
+                    public void accept(RxBleDevice rxBleDevice) throws Exception {
+                        RxBleLog.i("[%s] - %s",
+                                rxBleDevice.getMacAddress(),
+                                rxBleDevice.getName());
+                    }
+                });
     }
 }

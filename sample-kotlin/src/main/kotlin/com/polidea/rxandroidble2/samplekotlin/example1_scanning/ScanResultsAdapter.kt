@@ -5,24 +5,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.samplekotlin.example1_scanning.ScanResultsAdapter.ViewHolder
 import com.polidea.rxandroidble2.scan.ScanResult
 
 internal class ScanResultsAdapter(
-    private val onClickListener: (ScanResult) -> Unit
+    private val onClickListener: (RxBleDevice) -> Unit
 ) : RecyclerView.Adapter<ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val device: TextView = itemView.findViewById(android.R.id.text1)
-        val rssi: TextView = itemView.findViewById(android.R.id.text2)
+        val deviceName: TextView = itemView.findViewById(android.R.id.text1)
+        val deviceAddr: TextView = itemView.findViewById(android.R.id.text2)
     }
 
-    private val data = mutableListOf<ScanResult>()
+    private val data = mutableListOf<RxBleDevice>()
 
-    fun addScanResult(bleScanResult: ScanResult) {
+    fun addScanResult(bleScanResult: RxBleDevice) {
         // Not the best way to ensure distinct devices, just for the sake of the demo.
         data.withIndex()
-            .firstOrNull { it.value.bleDevice == bleScanResult.bleDevice }
+            .firstOrNull { it.value == bleScanResult }
             ?.let {
                 // device already in data list => update
                 data[it.index] = bleScanResult
@@ -32,7 +33,7 @@ internal class ScanResultsAdapter(
                 // new device => add to data list
                 with(data) {
                     add(bleScanResult)
-                    sortBy { it.bleDevice.macAddress }
+                    sortBy { it.macAddress }
                 }
                 notifyDataSetChanged()
             }
@@ -47,8 +48,8 @@ internal class ScanResultsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         with(data[position]) {
-            holder.device.text = String.format("%s (%s)", bleDevice.macAddress, bleDevice.name)
-            holder.rssi.text = String.format("RSSI: %d", rssi)
+            holder.deviceName.text = String.format("Device Name:%s", name)
+            holder.deviceAddr.text = String.format("addr: %s", macAddress)
             holder.itemView.setOnClickListener { onClickListener(this) }
         }
     }

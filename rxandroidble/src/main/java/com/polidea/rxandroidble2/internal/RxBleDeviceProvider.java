@@ -22,6 +22,10 @@ public class RxBleDeviceProvider {
     }
 
     public RxBleDevice getBleDevice(String macAddress) {
+        return getBleDevice(macAddress, false);
+    }
+
+    public RxBleDevice getBleDevice(String macAddress, Boolean isBredr) {
         final DeviceComponent cachedDeviceComponent = cachedDeviceComponents.get(macAddress);
 
         if (cachedDeviceComponent != null) {
@@ -34,12 +38,19 @@ public class RxBleDeviceProvider {
             if (secondCheckRxBleDevice != null) {
                 return secondCheckRxBleDevice.provideDevice();
             }
-
-            final DeviceComponent deviceComponent =
-                    deviceComponentBuilder.get()
-                            .macAddress(macAddress)
-                            .build();
-
+            final DeviceComponent deviceComponent;
+            if (!isBredr) {
+                 deviceComponent =
+                        deviceComponentBuilder.get()
+                                .macAddress(macAddress)
+                                .isBredr(false)
+                                .build();
+            } else {
+                deviceComponent = deviceComponentBuilder.get()
+                        .macAddress(macAddress)
+                        .isBredr(true)
+                        .build();
+            }
             final RxBleDevice newRxBleDevice = deviceComponent.provideDevice();
             cachedDeviceComponents.put(macAddress, deviceComponent);
             return newRxBleDevice;

@@ -1,10 +1,12 @@
 package com.polidea.rxandroidble2.bredr;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.DeadObjectException;
 
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.exceptions.BleException;
 import com.polidea.rxandroidble2.internal.QueueOperation;
+import com.polidea.rxandroidble2.internal.RxBleDeviceProvider;
 import com.polidea.rxandroidble2.internal.RxBleLog;
 import com.polidea.rxandroidble2.internal.serialization.QueueReleaseInterface;
 import com.polidea.rxandroidble2.internal.util.RxBleAdapterWrapper;
@@ -16,12 +18,15 @@ public class BredrScanOperation extends QueueOperation<RxBleDevice> {
 
     final RxBleAdapterWrapper rxBleAdapterWrapper;
     final BredrScanResultListener resultListener;
+    final RxBleDeviceProvider rxBleDeviceProvider;
 
     public BredrScanOperation(
             RxBleAdapterWrapper rxBleAdapterWrapper,
-            BredrScanResultListener resultListener) {
+            BredrScanResultListener resultListener,
+            RxBleDeviceProvider rxBleDeviceProvider) {
         this.rxBleAdapterWrapper = rxBleAdapterWrapper;
         this.resultListener = resultListener;
+        this.rxBleDeviceProvider = rxBleDeviceProvider;
     }
 
     @Override
@@ -47,9 +52,13 @@ public class BredrScanOperation extends QueueOperation<RxBleDevice> {
     private BredrScanCallback createScanCallback(final ObservableEmitter<RxBleDevice> emitter) {
         return new BredrScanCallback() {
             @Override
-            public void onScanned(RxBleDevice device) {
-
-                emitter.onNext(device);
+            public void onScanned(BluetoothDevice device, Boolean isBredr) {
+                RxBleDevice bleDevice = rxBleDeviceProvider.getBleDevice(device.getAddress(), isBredr);
+                emitter.onNext(bleDevice);
+            }
+            @Override
+            public void onScanStop() {
+                emitter.onComplete();
             }
         };
     }

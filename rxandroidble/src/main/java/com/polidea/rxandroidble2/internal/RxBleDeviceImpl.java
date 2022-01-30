@@ -1,5 +1,7 @@
 package com.polidea.rxandroidble2.internal;
 
+import static com.polidea.rxandroidble2.internal.DeviceModule.IS_BREDR;
+
 import android.bluetooth.BluetoothDevice;
 import androidx.annotation.Nullable;
 
@@ -16,6 +18,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import bleshadow.javax.inject.Inject;
+import bleshadow.javax.inject.Named;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.functions.Action;
@@ -27,16 +30,20 @@ class RxBleDeviceImpl implements RxBleDevice {
     final Connector connector;
     private final BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay;
     final AtomicBoolean isConnected = new AtomicBoolean(false);
+    final Boolean isBredr;
 
     @Inject
     RxBleDeviceImpl(
             BluetoothDevice bluetoothDevice,
             Connector connector,
-            BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay
+            BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay,
+            @Named(IS_BREDR) Boolean isBredr
     ) {
         this.bluetoothDevice = bluetoothDevice;
         this.connector = connector;
         this.connectionStateRelay = connectionStateRelay;
+        this.isBredr = isBredr;
+        RxBleLog.i("isBredr: %s", this.isBredr.toString());
     }
 
     @Override

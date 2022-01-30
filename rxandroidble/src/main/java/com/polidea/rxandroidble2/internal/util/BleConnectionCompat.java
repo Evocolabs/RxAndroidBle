@@ -17,7 +17,8 @@ import java.lang.reflect.Method;
 
 import bleshadow.javax.inject.Inject;
 
-import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
+import static android.bluetooth.BluetoothDevice.TRANSPORT_AUTO;
+//import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 public class BleConnectionCompat {
 
@@ -90,7 +91,7 @@ public class BleConnectionCompat {
         RxBleLog.v("Connecting without reflection");
 
         if (Build.VERSION.SDK_INT >= 23 /* Build.VERSION_CODES.M */) {
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_AUTO);
         } else {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback);
         }
@@ -114,7 +115,7 @@ public class BleConnectionCompat {
         RxBleLog.v("Found constructor with args count = " + bluetoothGattConstructor.getParameterTypes().length);
 
         if (bluetoothGattConstructor.getParameterTypes().length == 4) {
-            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, TRANSPORT_LE));
+            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, TRANSPORT_AUTO));
         } else {
             return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice));
         }

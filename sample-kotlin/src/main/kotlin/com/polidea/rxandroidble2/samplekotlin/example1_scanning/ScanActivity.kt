@@ -26,7 +26,7 @@ class ScanActivity : AppCompatActivity() {
     private var scanDisposable: Disposable? = null
 
     private val resultsAdapter =
-        ScanResultsAdapter { startActivity(DeviceActivity.newInstance(this, it.bleDevice.macAddress)) }
+        ScanResultsAdapter { startActivity(DeviceActivity.newInstance(this, it.macAddress)) }
 
     private var hasClickedScan = false
 
@@ -45,7 +45,7 @@ class ScanActivity : AppCompatActivity() {
 
         background_scan_btn.setOnClickListener { startActivity(BackgroundScanActivity.newInstance(this)) }
         scan_toggle_btn.setOnClickListener { onScanToggleClick() }
-        bredr_scan_btn.setOnClickListener()
+        bredr_scan_btn.setOnClickListener{ onScanBredrToggleClick() };
     }
 
     private fun configureResultList() {
@@ -61,10 +61,11 @@ class ScanActivity : AppCompatActivity() {
             scanDisposable?.dispose()
         } else {
             if (rxBleClient.isScanRuntimePermissionGranted) {
+                resultsAdapter.clearScanResults()
                 scanBleDevices()
                     .observeOn(AndroidSchedulers.mainThread())
                     .doFinally { dispose() }
-                    .subscribe({ resultsAdapter.addScanResult(it) }, { onScanFailure(it) })
+                    .subscribe({ resultsAdapter.addScanResult(it.bleDevice) }, { onScanFailure(it) })
                     .let { scanDisposable = it }
             } else {
                 hasClickedScan = true
@@ -93,18 +94,30 @@ class ScanActivity : AppCompatActivity() {
             bredrScanDisposable?.dispose()
         } else {
             if (rxBleClient.isScanRuntimePermissionGranted) {
+                resultsAdapter.clearScanResults()
                 scanBredrDevices()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doFinally{ disposeBredr() }
+                    .subscribe({
+                        if (it.name != null && it.name!!.lowercase().contains("orka"))
+                            resultsAdapter.addScanResult(it) }, {})
+                    .let { bredrScanDisposable = it }
             }
         }
+        updateButtonUIState()
     }
 
-    private fun scanBredrDevices() {
-        rxBleClient.scanBredrDevices()
+    private fun scanBredrDevices(): Observable<RxBleDevice> {
+        return rxBleClient.scanBredrDevices()
+    }
+
+    private fun disposeBredr() {
+        bredrScanDisposable = null
+        updateButtonUIState()
     }
 
     private fun dispose() {
         scanDisposable = null
-        resultsAdapter.clearScanResults()
         updateButtonUIState()
     }
 
@@ -112,8 +125,14 @@ class ScanActivity : AppCompatActivity() {
         if (throwable is BleScanException) showError(throwable)
     }
 
-    private fun updateButtonUIState() =
+    private fun updateButtonUIState() {
+        bredr_scan_btn.setText(
+            if (isBredrScanning)
+                R.string.button_stop_bredr_scan
+            else
+                R.string.button_start_bredr_scan)
         scan_toggle_btn.setText(if (isScanning) R.string.button_stop_scan else R.string.button_start_scan)
+    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (isLocationPermissionGranted(requestCode, grantResults) && hasClickedScan) {

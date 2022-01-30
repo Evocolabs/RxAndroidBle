@@ -15,6 +15,7 @@ public interface ConnectionComponent {
     class NamedBooleans {
         public static final String AUTO_CONNECT = "autoConnect";
         public static final String SUPPRESS_OPERATION_CHECKS = "suppressOperationChecks";
+        public static final String IS_CONNECTION_BREDR = "isConnectionBredr";
         private NamedBooleans() { }
     }
 
@@ -35,6 +36,9 @@ public interface ConnectionComponent {
 
         @BindsInstance
         Builder operationTimeout(Timeout operationTimeout);
+
+        @BindsInstance
+        Builder isBredr(@Named(NamedBooleans.IS_CONNECTION_BREDR) boolean isBredr);
 
         ConnectionComponent build();
     }
