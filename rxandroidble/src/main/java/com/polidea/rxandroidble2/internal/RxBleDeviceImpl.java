@@ -61,6 +61,7 @@ class RxBleDeviceImpl implements RxBleDevice {
         ConnectionSetup options = new ConnectionSetup.Builder()
                 .setAutoConnect(autoConnect)
                 .setSuppressIllegalOperationCheck(true)
+                .setIsBredr(isBredr)
                 .build();
         return establishConnection(options);
     }
@@ -71,6 +72,7 @@ class RxBleDeviceImpl implements RxBleDevice {
                 .setAutoConnect(autoConnect)
                 .setOperationTimeout(timeout)
                 .setSuppressIllegalOperationCheck(true)
+                .setIsBredr(isBredr)
                 .build();
         return establishConnection(options);
     }

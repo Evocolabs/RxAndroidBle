@@ -14,7 +14,7 @@ internal fun Activity.requestLocationPermission(client: RxBleClient) =
          * the below would cause a ArrayIndexOutOfBoundsException on API < 23. Yet it should not be called then as runtime
          * permissions are not needed and RxBleClient.isScanRuntimePermissionGranted() returns `true`
          */
-        arrayOf(client.recommendedScanRuntimePermissions[0]),
+        client.recommendedScanRuntimePermissions,
         REQUEST_PERMISSION_BLE_SCAN
     )
 

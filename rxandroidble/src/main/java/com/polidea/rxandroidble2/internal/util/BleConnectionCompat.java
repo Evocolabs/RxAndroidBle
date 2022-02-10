@@ -17,8 +17,8 @@ import java.lang.reflect.Method;
 
 import bleshadow.javax.inject.Inject;
 
-import static android.bluetooth.BluetoothDevice.TRANSPORT_AUTO;
-//import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
+import static android.bluetooth.BluetoothDevice.TRANSPORT_BREDR;
+import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 public class BleConnectionCompat {
 
@@ -29,7 +29,10 @@ public class BleConnectionCompat {
         this.context = context;
     }
 
-    public BluetoothGatt connectGatt(BluetoothDevice remoteDevice, boolean autoConnect, BluetoothGattCallback bluetoothGattCallback) {
+    public BluetoothGatt connectGatt(BluetoothDevice remoteDevice,
+                                     boolean autoConnect,
+                                     BluetoothGattCallback bluetoothGattCallback,
+                                     boolean isBrEdr) {
 
         if (remoteDevice == null) {
             return null;
@@ -43,7 +46,7 @@ public class BleConnectionCompat {
          * issue: https://android.googlesource.com/platform/frameworks/base/+/d35167adcaa40cb54df8e392379dfdfe98bcdba2%5E%21/#F0
           */
         if (Build.VERSION.SDK_INT >= 24 /* Build.VERSION_CODES.N */ || !autoConnect) {
-            return connectGattCompat(bluetoothGattCallback, remoteDevice, autoConnect);
+            return connectGattCompat(bluetoothGattCallback, remoteDevice, autoConnect, isBrEdr);
         }
 
         /**
@@ -58,14 +61,14 @@ public class BleConnectionCompat {
 
             if (iBluetoothGatt == null) {
                 RxBleLog.w("Couldn't get iBluetoothGatt object");
-                return connectGattCompat(bluetoothGattCallback, remoteDevice, true);
+                return connectGattCompat(bluetoothGattCallback, remoteDevice, true, isBrEdr);
             }
 
-            BluetoothGatt bluetoothGatt = createBluetoothGatt(iBluetoothGatt, remoteDevice);
+            BluetoothGatt bluetoothGatt = createBluetoothGatt(iBluetoothGatt, remoteDevice, isBrEdr);
 
             if (bluetoothGatt == null) {
                 RxBleLog.w("Couldn't create BluetoothGatt object");
-                return connectGattCompat(bluetoothGattCallback, remoteDevice, true);
+                return connectGattCompat(bluetoothGattCallback, remoteDevice, true, isBrEdr);
             }
 
             boolean connectedSuccessfully = connectUsingReflection(bluetoothGatt, bluetoothGattCallback, true);
@@ -83,15 +86,22 @@ public class BleConnectionCompat {
                 | InstantiationException
                 | NoSuchFieldException exception) {
             RxBleLog.w(exception, "Error while trying to connect via reflection");
-            return connectGattCompat(bluetoothGattCallback, remoteDevice, true);
+            return connectGattCompat(bluetoothGattCallback, remoteDevice, true, isBrEdr);
         }
     }
 
-    private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
+    private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback,
+                                            BluetoothDevice device,
+                                            boolean autoConnect,
+                                            boolean isBrEdr) {
         RxBleLog.v("Connecting without reflection");
 
         if (Build.VERSION.SDK_INT >= 23 /* Build.VERSION_CODES.M */) {
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_AUTO);
+            return device.connectGatt(
+                    context,
+                    autoConnect,
+                    bluetoothGattCallback,
+                    isBrEdr ? TRANSPORT_BREDR : TRANSPORT_LE);
         } else {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback);
         }
@@ -108,14 +118,15 @@ public class BleConnectionCompat {
     }
 
     @TargetApi(23 /* Build.VERSION_CODES.M */)
-    private BluetoothGatt createBluetoothGatt(Object iBluetoothGatt, BluetoothDevice remoteDevice)
+    private BluetoothGatt createBluetoothGatt(Object iBluetoothGatt, BluetoothDevice remoteDevice, boolean isBrEdr)
             throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor bluetoothGattConstructor = BluetoothGatt.class.getDeclaredConstructors()[0];
         bluetoothGattConstructor.setAccessible(true);
         RxBleLog.v("Found constructor with args count = " + bluetoothGattConstructor.getParameterTypes().length);
 
         if (bluetoothGattConstructor.getParameterTypes().length == 4) {
-            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, TRANSPORT_AUTO));
+            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice,
+                    isBrEdr ? TRANSPORT_BREDR : TRANSPORT_LE));
         } else {
             return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice));
         }

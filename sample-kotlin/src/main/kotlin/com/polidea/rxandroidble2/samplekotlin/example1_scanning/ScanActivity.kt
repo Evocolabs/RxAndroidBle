@@ -1,6 +1,18 @@
 package com.polidea.rxandroidble2.samplekotlin.example1_scanning
 
+import android.app.Activity
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.companion.AssociationRequest
+import android.companion.BluetoothDeviceFilter
+import android.companion.CompanionDeviceManager
+import android.content.Context
+import android.content.Intent
+import android.content.IntentSender
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.exceptions.BleScanException
@@ -18,8 +30,11 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_example1.*
+import java.util.regex.Pattern
 
 class ScanActivity : AppCompatActivity() {
+
+    val SELECT_DEVICE_REQUEST_CODE = 0x05
 
     private val rxBleClient = SampleApplication.rxBleClient
 
@@ -43,9 +58,34 @@ class ScanActivity : AppCompatActivity() {
         setContentView(R.layout.activity_example1)
         configureResultList()
 
-        background_scan_btn.setOnClickListener { startActivity(BackgroundScanActivity.newInstance(this)) }
+        background_scan_btn.setOnClickListener { onBackgroundClick() }
         scan_toggle_btn.setOnClickListener { onScanToggleClick() }
         bredr_scan_btn.setOnClickListener{ onScanBredrToggleClick() };
+    }
+
+    fun onBackgroundClick() {
+        val btManager: BluetoothManager = (getSystemService(Context.BLUETOOTH_SERVICE)) as BluetoothManager
+        val btAdapter: BluetoothAdapter = btManager.adapter
+        for (device in rxBleClient.bondedDevices) {
+            resultsAdapter.addScanResult(device)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            SELECT_DEVICE_REQUEST_CODE -> when(resultCode) {
+                Activity.RESULT_OK -> {
+                    // The user chose to pair the app with a Bluetooth device.
+                    val deviceToPair: BluetoothDevice? =
+                        data?.getParcelableExtra(CompanionDeviceManager.EXTRA_DEVICE)
+                    deviceToPair?.let { device ->
+                        device.createBond()
+                        // Continue to interact with the paired device.
+                    }
+                }
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
     private fun configureResultList() {
@@ -57,6 +97,33 @@ class ScanActivity : AppCompatActivity() {
     }
 
     private fun onScanToggleClick() {
+        Log.d("onScanToggleClick", "sdk version: %d".format(Build.VERSION.SDK_INT))
+        if (Build.VERSION.SDK_INT >= 26) {
+            val deviceFilter: BluetoothDeviceFilter = BluetoothDeviceFilter.Builder()
+                .setNamePattern(Pattern.compile("ok2_yyf"))
+                .build()
+            val pairingRequest: AssociationRequest = AssociationRequest.Builder()
+                .addDeviceFilter(deviceFilter)
+                .setSingleDevice(false)
+                .build();
+            val deviceManager: CompanionDeviceManager =
+                getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager;
+            if (deviceManager.associations.size != 0) {
+                val x = rxBleClient.getBredrDevice(deviceManager.associations[0])
+                x.establishConnection(false);
+
+                return
+            }
+            deviceManager.associate(pairingRequest,
+                object: CompanionDeviceManager.Callback () {
+                    override fun onDeviceFound(p0: IntentSender?) {
+                        startIntentSenderForResult(p0, SELECT_DEVICE_REQUEST_CODE, null, 0, 0, 0)
+                    }
+
+                    override fun onFailure(error: CharSequence?) {}
+                }, null)
+            return
+        }
         if (isScanning) {
             scanDisposable?.dispose()
         } else {
@@ -99,9 +166,11 @@ class ScanActivity : AppCompatActivity() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .doFinally{ disposeBredr() }
                     .subscribe({
-                        if (it.name != null && it.name!!.lowercase().contains("orka"))
+                        if (it.name != null && it.name!!.lowercase().contains("ok"))
                             resultsAdapter.addScanResult(it) }, {})
                     .let { bredrScanDisposable = it }
+            } else {
+              requestLocationPermission(rxBleClient)
             }
         }
         updateButtonUIState()

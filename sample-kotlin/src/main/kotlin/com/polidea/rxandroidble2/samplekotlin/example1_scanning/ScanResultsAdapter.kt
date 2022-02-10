@@ -48,7 +48,7 @@ internal class ScanResultsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         with(data[position]) {
-            holder.deviceName.text = String.format("Device Name:%s", name)
+            holder.deviceName.text = String.format("Device Name: %s", name)
             holder.deviceAddr.text = String.format("addr: %s", macAddress)
             holder.itemView.setOnClickListener { onClickListener(this) }
         }

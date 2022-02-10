@@ -158,6 +158,7 @@ public interface ClientComponent {
                 @Named(PlatformConstants.BOOL_IS_NEARBY_PERMISSION_NEVER_FOR_LOCATION) boolean isNearbyServicesNeverForLocation
         ) {
             int sdkVersion = Math.min(deviceSdk, targetSdk);
+            RxBleLog.v("sdkversion: %d", sdkVersion);
             if (sdkVersion < 23 /* pre Android M */) {
                 // Before API 23 (Android M) no runtime permissions are needed
                 return new String[][]{};
@@ -178,12 +179,14 @@ public interface ClientComponent {
             if (isNearbyServicesNeverForLocation) {
                 // if neverForLocation flag is used on BLUETOOTH_SCAN then it is the only permission needed
                 return new String[][]{
-                        new String[]{Manifest.permission.BLUETOOTH_SCAN}
+                        new String[]{Manifest.permission.BLUETOOTH_SCAN},
+                        new String[]{Manifest.permission.BLUETOOTH_CONNECT}
                 };
             }
             // otherwise ACCESS_FINE_LOCATION is needed as well
             return new String[][]{
                     new String[]{Manifest.permission.BLUETOOTH_SCAN},
+                    new String[]{Manifest.permission.BLUETOOTH_CONNECT},
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}
             };
         }

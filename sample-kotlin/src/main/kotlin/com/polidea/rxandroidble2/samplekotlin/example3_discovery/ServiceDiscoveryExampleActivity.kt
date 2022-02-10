@@ -42,7 +42,7 @@ class ServiceDiscoveryExampleActivity : AppCompatActivity() {
 
         macAddress = intent.getStringExtra(EXTRA_MAC_ADDRESS)!!
         supportActionBar!!.subtitle = getString(R.string.mac_address, macAddress)
-        bleDevice = SampleApplication.rxBleClient.getBleDevice(macAddress)
+        bleDevice = SampleApplication.rxBleClient.getBredrDevice(macAddress)
 
         scan_results.apply {
             setHasFixedSize(true)

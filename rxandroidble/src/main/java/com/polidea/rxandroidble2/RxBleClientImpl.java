@@ -1,6 +1,8 @@
 package com.polidea.rxandroidble2;
 
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -116,7 +118,7 @@ class RxBleClientImpl extends RxBleClient {
         return rxBleDeviceProvider.getBleDevice(macAddress);
     }
 
-    private RxBleDevice getBredrDevice(@NonNull String macAddress) {
+    public RxBleDevice getBredrDevice(@NonNull String macAddress) {
         guardBluetoothAdapterAvailable();
         return rxBleDeviceProvider.getBleDevice(macAddress, true);
     }
@@ -287,7 +289,11 @@ class RxBleClientImpl extends RxBleClient {
 
     @Override
     public String[] getRecommendedScanRuntimePermissions() {
-        return checkerScanPermission.getRecommendedScanRuntimePermissions();
+        String[] data = checkerScanPermission.getRecommendedScanRuntimePermissions();
+        for (String i : data) {
+            Log.d("RxBleClient", String.format("getRecommendedScanRuntimePermissions: %s", i));
+        }
+        return data;
     }
 
     @Override

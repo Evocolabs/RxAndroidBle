@@ -96,6 +96,16 @@ public abstract class RxBleClient {
     public abstract RxBleDevice getBleDevice(@NonNull String macAddress);
 
     /**
+     * Obtain instance of RxBleDevice for provided MAC address. This may be the same instance that was provided during scan operation but
+     * this in not guaranteed.
+     *
+     * @param macAddress Bluetooth BR/EDR device MAC address.
+     * @return Handle for Bluetooth BR/EDR operations.
+     * @throws UnsupportedOperationException if called on system without Bluetooth capabilities
+     */
+    public abstract RxBleDevice getBredrDevice(@NonNull String macAddress);
+
+    /**
      * A function returning a set of currently bonded devices
      *
      * If Bluetooth state is not STATE_ON, this API will return an empty set. After turning on Bluetooth, wait for ACTION_STATE_CHANGED

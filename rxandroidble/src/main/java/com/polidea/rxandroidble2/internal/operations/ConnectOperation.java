@@ -35,6 +35,7 @@ import static com.polidea.rxandroidble2.RxBleConnection.RxBleConnectionState.CON
 import static com.polidea.rxandroidble2.RxBleConnection.RxBleConnectionState.CONNECTING;
 import static com.polidea.rxandroidble2.internal.DeviceModule.CONNECT_TIMEOUT;
 import static com.polidea.rxandroidble2.internal.connection.ConnectionComponent.NamedBooleans.AUTO_CONNECT;
+import static com.polidea.rxandroidble2.internal.connection.ConnectionComponent.NamedBooleans.IS_CONNECTION_BREDR;
 import static com.polidea.rxandroidble2.internal.util.DisposableUtil.disposableSingleObserverFromEmitter;
 
 public class ConnectOperation extends QueueOperation<BluetoothGatt> {
@@ -45,6 +46,7 @@ public class ConnectOperation extends QueueOperation<BluetoothGatt> {
     final BluetoothGattProvider bluetoothGattProvider;
     final TimeoutConfiguration connectTimeout;
     final boolean autoConnect;
+    final boolean isBrEdr;
     final ConnectionStateChangeListener connectionStateChangedAction;
 
     @Inject
@@ -55,6 +57,7 @@ public class ConnectOperation extends QueueOperation<BluetoothGatt> {
             BluetoothGattProvider bluetoothGattProvider,
             @Named(CONNECT_TIMEOUT) TimeoutConfiguration connectTimeout,
             @Named(AUTO_CONNECT) boolean autoConnect,
+            @Named(IS_CONNECTION_BREDR) boolean isBrEdr,
             ConnectionStateChangeListener connectionStateChangedAction) {
         this.bluetoothDevice = bluetoothDevice;
         this.connectionCompat = connectionCompat;
@@ -62,6 +65,7 @@ public class ConnectOperation extends QueueOperation<BluetoothGatt> {
         this.bluetoothGattProvider = bluetoothGattProvider;
         this.connectTimeout = connectTimeout;
         this.autoConnect = autoConnect;
+        this.isBrEdr = isBrEdr;
         this.connectionStateChangedAction = connectionStateChangedAction;
     }
 
@@ -153,7 +157,7 @@ public class ConnectOperation extends QueueOperation<BluetoothGatt> {
                         * */
 
                 final BluetoothGatt bluetoothGatt = connectionCompat
-                        .connectGatt(bluetoothDevice, autoConnect, rxBleGattCallback.getBluetoothGattCallback());
+                        .connectGatt(bluetoothDevice, autoConnect, rxBleGattCallback.getBluetoothGattCallback(), isBrEdr);
                         /*
                         * Update BluetoothGatt when connection is initiated. It is not certain
                         * if this or RxBleGattCallback.onConnectionStateChange will be first.

@@ -42,9 +42,9 @@ public class ConnectorImpl implements Connector {
             public ObservableSource<RxBleConnection> call() {
                 final ConnectionComponent connectionComponent = connectionComponentBuilder
                         .autoConnect(options.autoConnect)
+                        .isBredr(options.isBredr)
                         .suppressOperationChecks(options.suppressOperationCheck)
                         .operationTimeout(options.operationTimeout)
-
                         .build();
 
                 final Set<ConnectionSubscriptionWatcher> connSubWatchers = connectionComponent.connectionSubscriptionWatchers();

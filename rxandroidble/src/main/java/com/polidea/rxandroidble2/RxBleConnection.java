@@ -137,7 +137,7 @@ public interface RxBleConnection {
          * Setter for a retry strategy in case something goes wrong when writing data. If any {@link BleException} is raised,
          * a {@link WriteOperationRetryStrategy.LongWriteFailure} object is emitted.
          * {@link WriteOperationRetryStrategy.LongWriteFailure} contains both the {@link BleException} and the batch number
-         * for which the write request failed. The {@link WriteOperationRetryStrategy.LongWriteFailure} emitted by the
+         * for which the write request` failed. The {@link WriteOperationRetryStrategy.LongWriteFailure} emitted by the
          * writeOperationRetryStrategy will be used to retry the specified batch number write request.
          * <br>
          * If this is not specified - if batch write fails, the long write operation is stopped and whole operation is interrupted.
