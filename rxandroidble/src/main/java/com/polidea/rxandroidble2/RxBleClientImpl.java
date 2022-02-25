@@ -304,6 +304,7 @@ class RxBleClientImpl extends RxBleClient {
                 rxBleDeviceProvider);
         return operationQueue
                 .queue(scanOperation)
+                .unsubscribeOn(bluetoothInteractionScheduler)
                 .doOnNext(new Consumer<RxBleDevice>() {
                     @Override
                     public void accept(RxBleDevice rxBleDevice) throws Exception {
@@ -311,6 +312,6 @@ class RxBleClientImpl extends RxBleClient {
                                 rxBleDevice.getMacAddress(),
                                 rxBleDevice.getName());
                     }
-                });
+                }).mergeWith(RxBleClientImpl.this.<RxBleDevice>bluetoothAdapterOffExceptionObservable());
     }
 }

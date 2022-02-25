@@ -98,32 +98,6 @@ class ScanActivity : AppCompatActivity() {
 
     private fun onScanToggleClick() {
         Log.d("onScanToggleClick", "sdk version: %d".format(Build.VERSION.SDK_INT))
-        if (Build.VERSION.SDK_INT >= 26) {
-            val deviceFilter: BluetoothDeviceFilter = BluetoothDeviceFilter.Builder()
-                .setNamePattern(Pattern.compile("ok2_yyf"))
-                .build()
-            val pairingRequest: AssociationRequest = AssociationRequest.Builder()
-                .addDeviceFilter(deviceFilter)
-                .setSingleDevice(false)
-                .build();
-            val deviceManager: CompanionDeviceManager =
-                getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager;
-            if (deviceManager.associations.size != 0) {
-                val x = rxBleClient.getBredrDevice(deviceManager.associations[0])
-                x.establishConnection(false);
-
-                return
-            }
-            deviceManager.associate(pairingRequest,
-                object: CompanionDeviceManager.Callback () {
-                    override fun onDeviceFound(p0: IntentSender?) {
-                        startIntentSenderForResult(p0, SELECT_DEVICE_REQUEST_CODE, null, 0, 0, 0)
-                    }
-
-                    override fun onFailure(error: CharSequence?) {}
-                }, null)
-            return
-        }
         if (isScanning) {
             scanDisposable?.dispose()
         } else {
@@ -132,7 +106,11 @@ class ScanActivity : AppCompatActivity() {
                 scanBleDevices()
                     .observeOn(AndroidSchedulers.mainThread())
                     .doFinally { dispose() }
-                    .subscribe({ resultsAdapter.addScanResult(it.bleDevice) }, { onScanFailure(it) })
+                    .subscribe({
+                        if (it.bleDevice.name!=null && (it.bleDevice.name!!.lowercase().contains("orka")
+                            ||it.bleDevice.name!!.lowercase().contains("ok"))) {
+                            resultsAdapter.addScanResult(it.bleDevice)
+                        } }, { onScanFailure(it) })
                     .let { scanDisposable = it }
             } else {
                 hasClickedScan = true
@@ -166,7 +144,7 @@ class ScanActivity : AppCompatActivity() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .doFinally{ disposeBredr() }
                     .subscribe({
-                        if (it.name != null && it.name!!.lowercase().contains("ok"))
+                        if (it.name != null && it.name!!.lowercase().contains("orka"))
                             resultsAdapter.addScanResult(it) }, {})
                     .let { bredrScanDisposable = it }
             } else {
