@@ -53,7 +53,20 @@ class CharacteristicOperationExampleActivity : AppCompatActivity() {
     private lateinit var bleDevice: RxBleDevice
 
     private val inputBytes: ByteArray
-        get() = write_input.text.toString().toByteArray()
+        get() {
+            val rawString = write_input.text.toString()
+            if (rawString.length % 2 != 0 || rawString.length / 2 == 0) {
+                Log.d("GET BYTEARRAY ERROR", "rawString: %s, rawString.length: %d".format(rawString, rawString.length))
+                throw Error("invalid input")
+            }
+            var i = 0
+            var intArray = ByteArray(rawString.length / 2)
+            while (i < rawString.length / 2) {
+                intArray[i] = rawString.substring(i*2,i*2+2).toUShort().toByte();
+                i++
+            }
+            return intArray
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
