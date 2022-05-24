@@ -1,15 +1,16 @@
 apply plugin: 'com.android.library'
 apply plugin: 'groovyx.android'
-apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply plugin: 'com.vanniktech.maven.publish'
+apply from: rootProject.file('gradle/gradle-mvn-config.gradle')
 
 android {
-    compileSdkVersion 31
+    namespace 'com.polidea.rxandroidble2'
+
+    compileSdkVersion 32
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 31
-        versionCode 1
-        versionName VERSION_NAME
+        targetSdkVersion 32
     }
 
     buildTypes {
@@ -36,7 +37,7 @@ android {
         }
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
@@ -47,20 +48,22 @@ androidGroovy {
     skipJavaC = true
 }
 
+afterEvaluate { project ->
+    // add explicit dependencies to compile groovy when testing
+    testDebugUnitTest.dependsOn 'compileDebugUnitTestGroovyWithGroovyc'
+    testReleaseUnitTest.dependsOn 'compileReleaseUnitTestGroovyWithGroovyc'
+}
+
 dependencies {
     api rootProject.ext.libs.rxjava
     api rootProject.ext.libs.annotations
     implementation rootProject.ext.libs.rxrelay
-    implementation project(path: ':dagger-library-shadow', transitive: false, configuration: 'shadow')
+    implementation files(tasks.getByPath(':dagger-library-shadow:shadowJar').archiveFile)
     annotationProcessor project(path: ':dagger-compiler-shadow', transitive: false, configuration: 'shadow')
 
     // Test dependencies
-    testImplementation project(path: ':dagger-library-shadow', transitive: false, configuration: 'shadow')
+    testImplementation files(tasks.getByPath(':dagger-library-shadow:shadowJar').archiveFile)
     testImplementation rootProject.ext.libs.junit
     testImplementation rootProject.ext.libs.groovy
     testImplementation rootProject.ext.libs.spock
-    testImplementation(rootProject.ext.libs.robolectric)
-    testImplementation(rootProject.ext.libs.electricspock){
-        exclude group: 'org.robolectric', module: 'android-all'
-    }
 }
