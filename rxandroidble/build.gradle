@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'groovyx.android'
 apply plugin: 'com.vanniktech.maven.publish'
 apply from: rootProject.file('gradle/gradle-mvn-config.gradle')
+apply plugin: "maven-publish"
 
 android {
     namespace 'com.polidea.rxandroidble2'
@@ -59,6 +60,25 @@ afterEvaluate { project ->
     // add explicit dependencies to compile groovy when testing
     testDebugUnitTest.dependsOn 'compileDebugUnitTestGroovyWithGroovyc'
     testReleaseUnitTest.dependsOn 'compileReleaseUnitTestGroovyWithGroovyc'
+}
+
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Evocolabs/RxAndroidBle")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            artifact("build/outputs/aar/rxandroidble-release.aar")
+        }
+    }
 }
 
 dependencies {

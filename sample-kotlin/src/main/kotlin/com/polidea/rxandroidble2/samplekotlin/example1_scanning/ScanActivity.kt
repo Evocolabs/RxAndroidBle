@@ -24,7 +24,9 @@ import com.polidea.rxandroidble2.samplekotlin.util.isScanPermissionGranted
 import com.polidea.rxandroidble2.samplekotlin.util.requestScanPermission
 import com.polidea.rxandroidble2.samplekotlin.util.showError
 import com.polidea.rxandroidble2.scan.ScanFilter
+import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_example1.*
@@ -104,7 +106,7 @@ class ScanActivity : AppCompatActivity() {
                 scanBleDevices()
                     .observeOn(AndroidSchedulers.mainThread())
                     .doFinally { dispose() }
-                    .subscribe({
+                    .subscribe({ it ->
                         if (it.bleDevice.name!=null && (it.bleDevice.name!!.lowercase().contains("orka")
                             ||it.bleDevice.name!!.lowercase().contains("ok"))) {
                             resultsAdapter.addScanResult(it.bleDevice)
@@ -129,11 +131,7 @@ class ScanActivity : AppCompatActivity() {
         val scanFilter = ScanFilter.Builder()
             .build()
 
-        rxBleClient.scanBleDevices(scanSettings, scanFilter)
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally { dispose() }
-            .subscribe({ resultsAdapter.addScanResult(it) }, { onScanFailure(it) })
-            .let { scanDisposable = it }
+        return rxBleClient.scanBleDevices(scanSettings, scanFilter)
     }
 
     private fun onScanBredrToggleClick() {
@@ -150,7 +148,7 @@ class ScanActivity : AppCompatActivity() {
                             resultsAdapter.addScanResult(it) }, {})
                     .let { bredrScanDisposable = it }
             } else {
-              requestLocationPermission(rxBleClient)
+                requestScanPermission(rxBleClient)
             }
         }
         updateButtonUIState()
