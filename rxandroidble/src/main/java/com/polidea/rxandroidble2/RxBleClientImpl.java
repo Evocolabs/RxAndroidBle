@@ -20,6 +20,7 @@ import com.polidea.rxandroidble2.internal.scan.ScanPreconditionsVerifier;
 import com.polidea.rxandroidble2.internal.scan.ScanSetup;
 import com.polidea.rxandroidble2.internal.scan.ScanSetupBuilder;
 import com.polidea.rxandroidble2.internal.serialization.ClientOperationQueue;
+import com.polidea.rxandroidble2.internal.util.CheckerConnectPermission;
 import com.polidea.rxandroidble2.internal.util.CheckerScanPermission;
 import com.polidea.rxandroidble2.internal.util.ClientStateObservable;
 import com.polidea.rxandroidble2.internal.util.LocationServicesStatus;
@@ -74,6 +75,7 @@ class RxBleClientImpl extends RxBleClient {
     private final BackgroundScanner backgroundScanner;
     private final CheckerScanPermission checkerScanPermission;
     private final BredrScanResultListener bredrScanResultListener;
+    private final CheckerConnectPermission checkerConnectPermission;
 
     @Inject
     RxBleClientImpl(BluetoothManagerWrapper bluetoothManagerWrapper,
@@ -91,7 +93,8 @@ class RxBleClientImpl extends RxBleClient {
                     ClientComponent.ClientComponentFinalizer clientComponentFinalizer,
                     BackgroundScanner backgroundScanner,
                     CheckerScanPermission checkerScanPermission,
-                    BredrScanResultListener bredrScanResultListener) {
+                    BredrScanResultListener bredrScanResultListener,
+                    CheckerConnectPermission checkerConnectPermission) {
         this.operationQueue = operationQueue;
         this.bluetoothManagerWrapper = bluetoothManagerWrapper;
         this.rxBleAdapterWrapper = rxBleAdapterWrapper;
@@ -108,6 +111,7 @@ class RxBleClientImpl extends RxBleClient {
         this.backgroundScanner = backgroundScanner;
         this.checkerScanPermission = checkerScanPermission;
         this.bredrScanResultListener = bredrScanResultListener;
+        this.checkerConnectPermission = checkerConnectPermission;
     }
 
     @Override
@@ -292,14 +296,18 @@ class RxBleClientImpl extends RxBleClient {
         }
         if (!locationServicesStatus.isLocationProviderOk()) {
             return State.LOCATION_SERVICES_NOT_ENABLED;
-        } else {
-            return State.READY;
         }
+        return State.READY;
     }
 
     @Override
     public boolean isScanRuntimePermissionGranted() {
         return checkerScanPermission.isScanRuntimePermissionGranted();
+    }
+
+    @Override
+    public boolean isConnectRuntimePermissionGranted() {
+        return checkerConnectPermission.isConnectRuntimePermissionGranted();
     }
 
     @Override
@@ -328,5 +336,10 @@ class RxBleClientImpl extends RxBleClient {
                                 rxBleDevice.getName());
                     }
                 }).mergeWith(RxBleClientImpl.this.<RxBleDevice>bluetoothAdapterOffExceptionObservable());
+    }
+
+    @Override
+    public String[] getRecommendedConnectRuntimePermissions() {
+        return checkerConnectPermission.getRecommendedConnectRuntimePermissions();
     }
 }

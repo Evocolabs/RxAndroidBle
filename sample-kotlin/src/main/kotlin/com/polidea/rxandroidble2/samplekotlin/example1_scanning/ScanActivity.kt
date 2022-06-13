@@ -20,13 +20,11 @@ import com.polidea.rxandroidble2.samplekotlin.DeviceActivity
 import com.polidea.rxandroidble2.samplekotlin.R
 import com.polidea.rxandroidble2.samplekotlin.SampleApplication
 import com.polidea.rxandroidble2.samplekotlin.example1a_background_scanning.BackgroundScanActivity
-import com.polidea.rxandroidble2.samplekotlin.util.isLocationPermissionGranted
-import com.polidea.rxandroidble2.samplekotlin.util.requestLocationPermission
+import com.polidea.rxandroidble2.samplekotlin.util.isScanPermissionGranted
+import com.polidea.rxandroidble2.samplekotlin.util.requestScanPermission
 import com.polidea.rxandroidble2.samplekotlin.util.showError
 import com.polidea.rxandroidble2.scan.ScanFilter
-import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_example1.*
@@ -114,7 +112,7 @@ class ScanActivity : AppCompatActivity() {
                     .let { scanDisposable = it }
             } else {
                 hasClickedScan = true
-                requestLocationPermission(rxBleClient)
+                requestScanPermission(rxBleClient)
             }
         }
         updateButtonUIState()
@@ -131,7 +129,11 @@ class ScanActivity : AppCompatActivity() {
         val scanFilter = ScanFilter.Builder()
             .build()
 
-        return rxBleClient.scanBleDevices(scanSettings, scanFilter)
+        rxBleClient.scanBleDevices(scanSettings, scanFilter)
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally { dispose() }
+            .subscribe({ resultsAdapter.addScanResult(it) }, { onScanFailure(it) })
+            .let { scanDisposable = it }
     }
 
     private fun onScanBredrToggleClick() {
@@ -170,6 +172,7 @@ class ScanActivity : AppCompatActivity() {
 
     private fun onScanFailure(throwable: Throwable) {
         if (throwable is BleScanException) showError(throwable)
+        else Log.w("ScanActivity", "Scan failed", throwable)
     }
 
     private fun updateButtonUIState() {
@@ -182,7 +185,7 @@ class ScanActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (isLocationPermissionGranted(requestCode, grantResults) && hasClickedScan) {
+        if (isScanPermissionGranted(requestCode, grantResults) && hasClickedScan) {
             hasClickedScan = false
             scanBleDevices()
         }

@@ -165,18 +165,19 @@ public abstract class RxBleClient {
     /**
      * Returns an observable emitting state _changes_ of the RxBleClient environment which may be helpful in deciding if particular
      * functionality should be used at a given moment.
-     *
+     * <p>
      * @see #getState() for {@link State} precedence order
-     *
+     * <p>
      * Examples:
-     * - If the device is in {@link State#READY} and the user will turn off the bluetooth adapter then {@link State#BLUETOOTH_NOT_ENABLED}
+     * <p> - If the device is in {@link State#READY} and the user will turn off the bluetooth adapter then
+     * {@link State#BLUETOOTH_NOT_ENABLED}
      * will be emitted.
-     * - If the device is in {@link State#BLUETOOTH_NOT_ENABLED} then changing state of Location Services will not cause emissions
+     * <p> - If the device is in {@link State#BLUETOOTH_NOT_ENABLED} then changing state of Location Services will not cause emissions
      * because of the checks order
-     * - If the device is in {@link State#BLUETOOTH_NOT_AVAILABLE} then this {@link Observable} will complete because any other checks
+     * <p> - If the device is in {@link State#BLUETOOTH_NOT_AVAILABLE} then this {@link Observable} will complete because any other checks
      * will not be performed as devices are not expected to obtain bluetooth capabilities during runtime
-     *
-     * To get the initial {@link State} and then observe changes you can use: `observeStateChanges().startWith(getState())`.
+     * <p>
+     * <p> To get the initial {@link State} and then observe changes you can use: `observeStateChanges().startWith(getState())`.
      *
      * @return the observable
      */
@@ -185,21 +186,21 @@ public abstract class RxBleClient {
     /**
      * Returns the current state of the RxBleClient environment, which may be helpful in deciding if particular functionality
      * should be used at a given moment. The function concentrates on states that are blocking the full functionality of the library.
-     *
-     * Checking order:
-     * 1. Is Bluetooth available?
-     * 2. Is Location Permission granted? (if needed = API>=23)
-     * 3. Is Bluetooth Adapter on?
-     * 4. Are Location Services enabled? (if needed = API>=23)
-     *
-     * If any of the checks fails an appropriate State is returned and next checks are not performed.
-     *
-     * State precedence order is as follows:
-     * {@link State#BLUETOOTH_NOT_AVAILABLE} if check #1 fails,
-     * {@link State#LOCATION_PERMISSION_NOT_GRANTED} if check #2 fails,
-     * {@link State#BLUETOOTH_NOT_ENABLED} if check #3 fails,
-     * {@link State#LOCATION_SERVICES_NOT_ENABLED} if check #4 fails,
-     * {@link State#READY}
+     * <p>
+     * <p> Checking order:
+     * <p> 1. Is Bluetooth available?
+     * <p> 2. Is Location Permission granted? (if needed = API>=23)
+     * <p> 3. Is Bluetooth Adapter on?
+     * <p> 4. Are Location Services enabled? (if needed = API>=23)
+     * <p>
+     * <p> If any of the checks fails an appropriate State is returned and next checks are not performed.
+     * <p>
+     * <p> State precedence order is as follows:
+     * <p> {@link State#BLUETOOTH_NOT_AVAILABLE} if check #1 fails,
+     * <p> {@link State#LOCATION_PERMISSION_NOT_GRANTED} if check #2 fails,
+     * <p> {@link State#BLUETOOTH_NOT_ENABLED} if check #3 fails,
+     * <p> {@link State#LOCATION_SERVICES_NOT_ENABLED} if check #4 fails,
+     * <p> {@link State#READY}
      *
      * @return the current state
      */
@@ -212,6 +213,14 @@ public abstract class RxBleClient {
      * @return true if needed permissions are granted, false otherwise
      */
     public abstract boolean isScanRuntimePermissionGranted();
+
+    /**
+     * Returns whether runtime permissions needed to start a BLE connection are granted. If permissions are not granted then one may check
+     * {@link #getRecommendedConnectRuntimePermissions()} to get Android runtime permission strings needed for connecting a BLE device.
+     *
+     * @return true if needed permissions are granted, false otherwise
+     */
+    public abstract boolean isConnectRuntimePermissionGranted();
 
     /**
      * Returns permission strings needed by the application to run a BLE scan or an empty array if no runtime permissions are needed. Since
@@ -241,4 +250,19 @@ public abstract class RxBleClient {
     public abstract String[] getRecommendedScanRuntimePermissions();
 
     public abstract Observable<RxBleDevice> scanBredrDevices();
+    /**
+     * Returns permission strings needed by the application to connect a BLE device or empty array if no runtime permissions are needed.
+     * No runtime permissions were needed for connecting a BLE device up to Android 12.0.
+     * <p>
+     * Returned values:
+     * <p>
+     * case: API < 31<p>
+     * Empty array. No runtime permissions needed.
+     * <p>
+     * case: 31 <= API<p>
+     * {@link android.Manifest.permission#BLUETOOTH_CONNECT}
+     *
+     * @return an ordered array of possible scan permissions
+     */
+    public abstract String[] getRecommendedConnectRuntimePermissions();
 }
