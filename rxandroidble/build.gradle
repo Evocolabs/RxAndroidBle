@@ -69,14 +69,12 @@ afterEvaluate { project ->
                 credentials {
                     username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                     password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-                    println username + password
                 }
             }
         }
         publications {
             gpr(MavenPublication) {
                 groupId="com.hiorka"
-                println components*.name
                 from components.release
             }
         }
@@ -84,9 +82,7 @@ afterEvaluate { project ->
     signing {
         def signingKey = project.findProperty("signing.keyId")?:System.getenv("SIGN_KEY_ID")
         def signingPassword = project.findProperty("signing.password")?:System.getenv("SIGN_PASSWORD")
-        println "key & password: "+ signingKey + ", " + signingPassword
         useInMemoryPgpKeys(signingKey, signingPassword)
-        println configurations.getNames()
         sign configurations.archives
     }
 }
