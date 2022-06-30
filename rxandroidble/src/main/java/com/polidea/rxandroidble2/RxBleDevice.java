@@ -123,6 +123,11 @@ public interface RxBleDevice {
     String getMacAddress();
 
     /**
+     *  ble connection using transport BLE or BREDR
+     */
+    Boolean getIsBredr();
+
+    /**
      * The underlying android.bluetooth.BluetoothDevice.
      *
      * NOTE: this should be used with caution and knowledge as interaction with the BluetoothDevice may interrupt the flow of this library.
