@@ -103,7 +103,9 @@ class RxBleDeviceImpl implements RxBleDevice {
     }
 
     @Override
-    public Boolean getIsBredr() { return isBredr; }
+    public Boolean getIsBredr() {
+        return isBredr;
+    }
 
     @Override
     public String getMacAddress() {

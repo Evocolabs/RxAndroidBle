@@ -340,6 +340,10 @@ public class RxBleDeviceMock implements RxBleDevice {
         return legacyScanRecord;
     }
 
+    public Boolean getIsBredr() {
+        return false;
+    }
+
     public ScanRecord getScanRecord() {
         return scanRecord;
     }
