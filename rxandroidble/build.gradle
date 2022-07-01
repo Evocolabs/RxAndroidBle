@@ -82,7 +82,7 @@ afterEvaluate { project ->
     signing {
         def signingKey = project.findProperty("signing.keyId")?:System.getenv("SIGN_KEY_ID")
         def signingPassword = project.findProperty("signing.password")?:System.getenv("SIGN_PASSWORD")
-        signingkey ? println((signingKey as String).substring(0,20)) : println('No SIgningKey found')
+        signingKey ? println((signingKey as String).substring(0,20)) : println('No SIgningKey found')
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign configurations.archives
     }
