@@ -31,6 +31,14 @@ jobs:
 
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # the publishing section of your build.gradle
+    - name: SaveKeyToLocalProperties
+      run: echo "signing.keyId=$SIGN_KEY_ID\n" >> local.properties && echo "signing.password=$SIGN_PASSWORD\n" >> local.properties
+      shell: bash
+      env:
+        USERNAME: ${{ github.actor }}
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SIGN_KEY_ID: ${{ secrets.SIGN_KEY_ID }}
+        SIGN_PASSWORD: ${{ secrets.SIGN_PASSWORD }}
     - name: Publish to GitHub Packages
       uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
       with:
