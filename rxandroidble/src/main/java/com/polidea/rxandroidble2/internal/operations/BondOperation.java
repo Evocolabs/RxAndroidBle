@@ -12,6 +12,8 @@ import com.polidea.rxandroidble2.internal.DeviceScope;
 import com.polidea.rxandroidble2.internal.QueueOperation;
 import com.polidea.rxandroidble2.internal.serialization.QueueReleaseInterface;
 
+import java.util.Objects;
+
 import bleshadow.javax.inject.Inject;
 import io.reactivex.ObservableEmitter;
 
@@ -34,6 +36,9 @@ public class BondOperation extends QueueOperation<Boolean> {
             boolean triedBond = false;
             @Override
             public void onReceive(int n, int p, BluetoothDevice d) {
+                if (!Objects.equals(d.getAddress(), device.getAddress())) {
+                    return;
+                }
                 if (n == BluetoothDevice.BOND_BONDING) {
                     triedBond = true;
                     return;
@@ -42,10 +47,12 @@ public class BondOperation extends QueueOperation<Boolean> {
                     if (n == BluetoothDevice.BOND_NONE) {
                         emitter.onNext(false);
                         emitter.onComplete();
+                        queueReleaseInterface.release();
                         context.unregisterReceiver(mRecv);
                     } else if (n == BluetoothDevice.BOND_BONDED) {
                         emitter.onNext(true);
                         emitter.onComplete();
+                        queueReleaseInterface.release();
                         context.unregisterReceiver(mRecv);
                     }
                 }

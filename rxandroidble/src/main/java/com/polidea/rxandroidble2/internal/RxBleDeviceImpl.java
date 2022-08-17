@@ -99,9 +99,8 @@ class RxBleDeviceImpl implements RxBleDevice {
     }
 
     public Single<Boolean> createBond() {
-        return Single.defer(() -> {
-            return connector.createBond();
-        });
+        return Single.defer(() -> connector.createBond()
+        );
     }
 
     @Override
