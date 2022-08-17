@@ -30,7 +30,15 @@ public class BondOperation extends QueueOperation<Boolean> {
 
     @Override
     protected void protectedRun(ObservableEmitter<Boolean> emitter, QueueReleaseInterface queueReleaseInterface) throws Throwable {
-        device.createBond();
+        if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+            device.createBond();
+        }
+        if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            emitter.onNext(true);
+            emitter.onComplete();
+            queueReleaseInterface.release();
+            return;
+        }
         DeviceBondBroadcastReceiver mRecv = new DeviceBondBroadcastReceiver();
         mRecv.i = new DevcieBondBroadcastReceiverInterface() {
             boolean triedBond = false;

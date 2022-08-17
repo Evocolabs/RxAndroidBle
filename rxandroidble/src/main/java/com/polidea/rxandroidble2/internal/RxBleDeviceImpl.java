@@ -99,6 +99,9 @@ class RxBleDeviceImpl implements RxBleDevice {
     }
 
     public Single<Boolean> createBond() {
+        if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+            return Single.just(true);
+        }
         return Single.defer(() -> connector.createBond()
         );
     }
