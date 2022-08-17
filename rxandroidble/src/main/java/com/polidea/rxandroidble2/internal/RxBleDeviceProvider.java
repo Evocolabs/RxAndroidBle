@@ -1,7 +1,7 @@
 package com.polidea.rxandroidble2.internal;
 
-import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.ClientScope;
+import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.internal.cache.DeviceComponentCache;
 
 import java.util.Map;
@@ -39,18 +39,10 @@ public class RxBleDeviceProvider {
                 return secondCheckRxBleDevice.provideDevice();
             }
             final DeviceComponent deviceComponent;
-            if (!isBredr) {
-                 deviceComponent =
-                        deviceComponentBuilder.get()
-                                .macAddress(macAddress)
-                                .isBredr(false)
-                                .build();
-            } else {
-                deviceComponent = deviceComponentBuilder.get()
-                        .macAddress(macAddress)
-                        .isBredr(true)
-                        .build();
-            }
+            deviceComponent = deviceComponentBuilder.get()
+                    .macAddress(macAddress)
+                    .isBredr(isBredr)
+                    .build();
             final RxBleDevice newRxBleDevice = deviceComponent.provideDevice();
             cachedDeviceComponents.put(macAddress, deviceComponent);
             return newRxBleDevice;

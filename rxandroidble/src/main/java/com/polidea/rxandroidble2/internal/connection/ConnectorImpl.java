@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import com.polidea.rxandroidble2.ClientComponent;
 import com.polidea.rxandroidble2.ConnectionSetup;
 import com.polidea.rxandroidble2.RxBleConnection;
+import com.polidea.rxandroidble2.internal.operations.BondOperation;
 import com.polidea.rxandroidble2.internal.serialization.ClientOperationQueue;
 
 import java.util.Set;
@@ -15,6 +16,7 @@ import bleshadow.javax.inject.Named;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -24,15 +26,19 @@ public class ConnectorImpl implements Connector {
     private final ClientOperationQueue clientOperationQueue;
     final ConnectionComponent.Builder connectionComponentBuilder;
     final Scheduler callbacksScheduler;
+    final BondOperation bondOperation;
 
     @Inject
     public ConnectorImpl(
             ClientOperationQueue clientOperationQueue,
             ConnectionComponent.Builder connectionComponentBuilder,
-            @Named(ClientComponent.NamedSchedulers.BLUETOOTH_CALLBACKS) Scheduler callbacksScheduler) {
+            @Named(ClientComponent.NamedSchedulers.BLUETOOTH_CALLBACKS) Scheduler callbacksScheduler,
+            BondOperation bondOperation
+    ) {
         this.clientOperationQueue = clientOperationQueue;
         this.connectionComponentBuilder = connectionComponentBuilder;
         this.callbacksScheduler = callbacksScheduler;
+        this.bondOperation = bondOperation;
     }
 
     @Override
@@ -71,6 +77,10 @@ public class ConnectorImpl implements Connector {
                         .unsubscribeOn(callbacksScheduler);
             }
         });
+    }
+
+    public Single<Boolean> createBond() {
+        return clientOperationQueue.queue(bondOperation).firstOrError();
     }
 
     static Observable<RxBleConnection> obtainRxBleConnection(final ConnectionComponent connectionComponent) {

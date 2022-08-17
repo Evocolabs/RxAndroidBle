@@ -65,6 +65,6 @@ dependencies {
     implementation rootProject.ext.libs.rxjava_replayingshare
 
     // Test
-    testImplementation project(':mockrxandroidble')
-    testImplementation rootProject.ext.libs.junit
+ //    testImplementation project(':mockrxandroidble')
+//    testImplementation rootProject.ext.libs.junit
 }

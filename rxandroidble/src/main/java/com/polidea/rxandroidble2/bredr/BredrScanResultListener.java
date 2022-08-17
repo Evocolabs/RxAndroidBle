@@ -41,7 +41,7 @@ public class BredrScanResultListener {
                     RxBleLog.i("Bredr Scan- %s, %s", device.getName(), device.getAddress());
                     RxBleLog.i("Bluetooth Major class: %d", majorClass);
                     // Only UnCategorized Device should be labeled as BLE device.
-                    cb.onScanned(device, majorClass != BluetoothClass.Device.Major.UNCATEGORIZED);
+                    cb.onScanned(device, btClass);
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     cb.onScanStop();
                 }

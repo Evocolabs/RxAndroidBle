@@ -1,14 +1,16 @@
 package com.polidea.rxandroidble2.internal.operations;
 
 import android.bluetooth.BluetoothGatt;
+
 import androidx.annotation.RequiresApi;
 
 import com.polidea.rxandroidble2.exceptions.BleGattOperationType;
 import com.polidea.rxandroidble2.internal.SingleResponseOperation;
 import com.polidea.rxandroidble2.internal.connection.RxBleGattCallback;
 
-import bleshadow.javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
+import bleshadow.javax.inject.Inject;
 import io.reactivex.Single;
 
 @RequiresApi(21 /* Build.VERSION_CODES.LOLLIPOP */)
@@ -21,7 +23,8 @@ public class MtuRequestOperation extends SingleResponseOperation<Integer> {
             RxBleGattCallback rxBleGattCallback,
             BluetoothGatt bluetoothGatt,
             TimeoutConfiguration timeoutConfiguration, int requestedMtu) {
-        super(bluetoothGatt, rxBleGattCallback, BleGattOperationType.ON_MTU_CHANGED, timeoutConfiguration);
+        super(bluetoothGatt, rxBleGattCallback, BleGattOperationType.ON_MTU_CHANGED,
+                new TimeoutConfiguration(10, TimeUnit.SECONDS, timeoutConfiguration.timeoutScheduler));
         mtu = requestedMtu;
     }
 

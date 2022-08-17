@@ -12,6 +12,7 @@ import com.polidea.rxandroidble2.exceptions.BleGattCallbackTimeoutException;
 import com.polidea.rxandroidble2.exceptions.BleGattException;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 
 
 public interface RxBleDevice {
@@ -108,6 +109,8 @@ public interface RxBleDevice {
      *                                         established. In order to share the connection, share #establishConnection emissions.
      */
     Observable<RxBleConnection> establishConnection(boolean autoConnect, @NonNull Timeout operationTimeout);
+
+    Single<Boolean> createBond();
 
     /**
      * Name of the device. Name is optional and it's up to the device vendor if will be provided.
