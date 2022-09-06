@@ -137,4 +137,6 @@ public interface RxBleDevice {
      * @return the BluetoothDevice
      */
     BluetoothDevice getBluetoothDevice();
+
+    Boolean getA2dpConnected();
 }

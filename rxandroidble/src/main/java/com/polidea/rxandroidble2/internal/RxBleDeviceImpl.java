@@ -2,7 +2,12 @@ package com.polidea.rxandroidble2.internal;
 
 import static com.polidea.rxandroidble2.internal.DeviceModule.IS_BREDR;
 
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
+import android.content.Context;
+
 import androidx.annotation.Nullable;
 
 import com.jakewharton.rxrelay2.BehaviorRelay;
@@ -33,11 +38,14 @@ class RxBleDeviceImpl implements RxBleDevice {
     private final BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay;
     final AtomicBoolean isConnected = new AtomicBoolean(false);
     final Boolean isBredr;
+    BluetoothA2dp a2dpProfile;
 
     @Inject
     RxBleDeviceImpl(
             BluetoothDevice bluetoothDevice,
+            @Nullable BluetoothAdapter bluetoothAdapter,
             Connector connector,
+            Context context,
             BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay,
             @Named(IS_BREDR) Boolean isBredr
     ) {
@@ -45,6 +53,19 @@ class RxBleDeviceImpl implements RxBleDevice {
         this.connector = connector;
         this.connectionStateRelay = connectionStateRelay;
         this.isBredr = isBredr;
+
+        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+            @Override
+            public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                if (profile == BluetoothProfile.A2DP) {
+                    a2dpProfile = (BluetoothA2dp) proxy;
+                }
+            }
+            @Override
+            public void onServiceDisconnected(int profile) {
+                a2dpProfile = null;
+            }
+        }, BluetoothProfile.A2DP);
         RxBleLog.i("isBredr: %s", this.isBredr.toString());
     }
 
@@ -125,6 +146,11 @@ class RxBleDeviceImpl implements RxBleDevice {
     @Override
     public BluetoothDevice getBluetoothDevice() {
         return bluetoothDevice;
+    }
+
+    @Override
+    public Boolean getA2dpConnected() {
+        return a2dpProfile.getConnectionState(bluetoothDevice) == BluetoothA2dp.STATE_CONNECTED;
     }
 
     @Override

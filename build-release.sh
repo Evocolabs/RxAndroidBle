@@ -1,0 +1,1 @@
+./gradlew :rxandroidble:assemble :rxandroidble:publishGprPublicationToGithubPackageRepository

@@ -138,8 +138,9 @@ public interface ClientComponent {
 
         @Provides
         @Nullable
-        static BluetoothAdapter provideBluetoothAdapter() {
-            return BluetoothAdapter.getDefaultAdapter();
+        static BluetoothAdapter provideBluetoothAdapter(BluetoothManager bluetoothManager) {
+            return bluetoothManager.getAdapter();
+//            return BluetoothAdapter.getDefaultAdapter();
         }
 
         @Provides
