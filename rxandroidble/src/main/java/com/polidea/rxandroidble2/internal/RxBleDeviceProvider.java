@@ -33,7 +33,8 @@ public class RxBleDeviceProvider {
         }
 
         synchronized (cachedDeviceComponents) {
-            final DeviceComponent secondCheckRxBleDevice = cachedDeviceComponents.get(macAddress);
+            String isBredrPrefix = isBredr ? "BREDR@" : "BLE@";
+            final DeviceComponent secondCheckRxBleDevice = cachedDeviceComponents.get(isBredrPrefix + macAddress);
 
             if (secondCheckRxBleDevice != null) {
                 return secondCheckRxBleDevice.provideDevice();
