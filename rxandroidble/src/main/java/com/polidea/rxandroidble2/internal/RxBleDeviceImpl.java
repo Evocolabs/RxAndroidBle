@@ -20,6 +20,7 @@ import com.polidea.rxandroidble2.internal.connection.Connector;
 
 import com.polidea.rxandroidble2.internal.logger.LoggerUtil;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -120,11 +121,19 @@ class RxBleDeviceImpl implements RxBleDevice {
     }
 
     public Single<Boolean> createBond() {
-        if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-            return Single.just(true);
+        if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED && !getA2dpConnected()) {
+            // This [createBond] method is usually called when device is discovered by bredr scanner.
+            // it's weird that sometimes a already paired device didn't connect to classic bluetooth
+            // but is scanned over [BluetoothAdaper.startDiscovery]. It might happen when the device
+            // it self removed historical bonding information and thus need a re-bond.
+            try {
+                Method method = bluetoothDevice.getClass().getMethod("removeBond", (Class[]) null);
+                method.invoke(bluetoothDevice, (Object[]) null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        return Single.defer(() -> connector.createBond()
-        );
+        return Single.defer(() -> connector.createBond());
     }
 
     @Override
