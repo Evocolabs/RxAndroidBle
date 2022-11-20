@@ -193,7 +193,7 @@ public class BluetoothDevice implements Parcelable {
             TRANSPORT_BREDR,
             TRANSPORT_LE,
         }
-    )
+    )1
     public @interface Transport {}
     public static final int TRANSPORT_AUTO = 0;
     public static final int TRANSPORT_BREDR = 1;

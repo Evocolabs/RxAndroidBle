@@ -41,7 +41,11 @@ class ScanActivity : AppCompatActivity() {
     private var scanDisposable: Disposable? = null
 
     private val resultsAdapter =
-        ScanResultsAdapter { startActivity(DeviceActivity.newInstance(this, it.macAddress)) }
+        ScanResultsAdapter {
+            Log.d("OnClick", ": devicePressed")
+            it.createBond().subscribe({
+                Log.d("createBond", ": onSuccess")
+            },{e -> print(e)}) }
 
     private var hasClickedScan = false
 

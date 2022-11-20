@@ -24,7 +24,7 @@ public class MtuRequestOperation extends SingleResponseOperation<Integer> {
             BluetoothGatt bluetoothGatt,
             TimeoutConfiguration timeoutConfiguration, int requestedMtu) {
         super(bluetoothGatt, rxBleGattCallback, BleGattOperationType.ON_MTU_CHANGED,
-                new TimeoutConfiguration(5, TimeUnit.SECONDS, timeoutConfiguration.timeoutScheduler));
+                new TimeoutConfiguration(10, TimeUnit.SECONDS, timeoutConfiguration.timeoutScheduler));
         mtu = requestedMtu;
     }
 
