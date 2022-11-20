@@ -9,7 +9,7 @@ def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties"))) //Set env variable GPR_USER & GPR_API_KEY if not adding a properties file
 
 def getVersionName = { ->
-    return "1.0.9" // Replace with version Name
+    return "1.0.10" // Replace with version Name
 }
 
 def getArtificatId = { ->
@@ -19,11 +19,11 @@ def getArtificatId = { ->
 android {
     namespace 'com.polidea.rxandroidble2'
 
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 32
+        targetSdkVersion 33
     }
 
     buildTypes {
