@@ -3,6 +3,17 @@ apply plugin: 'groovyx.android'
 apply plugin: 'com.vanniktech.maven.publish'
 apply from: rootProject.file('gradle/gradle-mvn-config.gradle')
 
+def githubProperties = new Properties()
+githubProperties.load(new FileInputStream(rootProject.file("github.properties"))) //Set env variable GPR_USER & GPR_API_KEY if not adding a properties file
+
+def getVersionName = { ->
+    return rootProject.ext.publishingVersionName// Replace with version Name
+}
+
+def getArtificatId = { ->
+    return "mockrxandroidble" // Replace with library name ID
+}
+
 android {
     namespace 'com.polidea.rxandroidble2.mockrxandroidble'
 
@@ -39,6 +50,28 @@ android {
         test {
             java {
                 srcDir("../rxandroidble/src/test/java") // Add android stubs from main lib tests
+            }
+        }
+    }
+
+    publishing {
+        publications {
+            gpr(MavenPublication) {
+                groupId 'com.hiorka' // Replace with group ID
+                artifactId getArtificatId()
+                version getVersionName()
+                artifact("$buildDir/outputs/aar/${getArtificatId()}-release.aar")
+            }
+        }
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/Evocolabs/mockrxandroidble")
+                credentials {
+                    username = githubProperties['gpr.usr'] ?: System.getenv("GPR_USER")
+                    password = githubProperties['gpr.key'] ?: System.getenv("GPR_API_KEY")
+                }
             }
         }
     }
