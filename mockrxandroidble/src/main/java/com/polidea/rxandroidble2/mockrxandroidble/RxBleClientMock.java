@@ -39,6 +39,7 @@ public class RxBleClientMock extends RxBleClient {
     public static class Builder {
 
         private ReplaySubject<RxBleDeviceMock> discoverableDevicesSubject;
+        private ReplaySubject<RxBleDeviceMock> discoverableBredrDevicesSubject;
         private Set<RxBleDevice> bondedDevices;
         private Set<RxBleDevice> connectedPeripherals;
 
@@ -47,12 +48,18 @@ public class RxBleClientMock extends RxBleClient {
          */
         public Builder() {
             this.discoverableDevicesSubject = ReplaySubject.create();
+            this.discoverableBredrDevicesSubject = ReplaySubject.create();
             this.bondedDevices = new HashSet<>();
             this.connectedPeripherals = new HashSet<>();
         }
 
         public Builder setDeviceDiscoveryObservable(@NonNull Observable<RxBleDeviceMock> discoverableDevicesObservable) {
             discoverableDevicesObservable.subscribe(this.discoverableDevicesSubject);
+            return this;
+        }
+
+        public Builder setBredrDeviceDiscoveryObservable(@NonNull Observable<RxBleDeviceMock> discoverableBredrDevicesObservable) {
+            discoverableBredrDevicesObservable.subscribe(this.discoverableBredrDevicesSubject);
             return this;
         }
 
@@ -96,6 +103,7 @@ public class RxBleClientMock extends RxBleClient {
 
     /**
      * Device builder class.
+     *
      * @deprecated Use {@link RxBleDeviceMock.Builder}
      */
     @Deprecated
@@ -118,7 +126,7 @@ public class RxBleClientMock extends RxBleClient {
         /**
          * Adds a {@link BluetoothGattCharacteristic}
          *
-         * @param characteristic        The characteristic to add
+         * @param characteristic The characteristic to add
          */
         public CharacteristicsBuilder addCharacteristic(BluetoothGattCharacteristic characteristic) {
             this.bluetoothGattCharacteristics.add(characteristic);
@@ -148,9 +156,9 @@ public class RxBleClientMock extends RxBleClient {
         /**
          * Adds a {@link BluetoothGattCharacteristic} with specified parameters.
          *
-         * @param uuid        characteristic UUID
-         * @param data        locally stored value of the characteristic
-         * @param properties  OR-ed {@link BluetoothGattCharacteristic} property constants
+         * @param uuid       characteristic UUID
+         * @param data       locally stored value of the characteristic
+         * @param properties OR-ed {@link BluetoothGattCharacteristic} property constants
          */
         public CharacteristicsBuilder addCharacteristic(@NonNull UUID uuid,
                                                         @NonNull byte[] data,
@@ -202,8 +210,8 @@ public class RxBleClientMock extends RxBleClient {
         /**
          * Adds a {@link BluetoothGattCharacteristic} with specified parameters.
          *
-         * @param uuid        characteristic UUID
-         * @param data        locally stored value of the characteristic
+         * @param uuid characteristic UUID
+         * @param data locally stored value of the characteristic
          */
         public CharacteristicsBuilder addCharacteristic(@NonNull UUID uuid,
                                                         @NonNull byte[] data) {
@@ -263,11 +271,13 @@ public class RxBleClientMock extends RxBleClient {
     private Set<RxBleDevice> bondedDevices;
     private Set<RxBleDevice> connectedPeripherals;
     private ReplaySubject<RxBleDeviceMock> discoveredDevicesSubject;
+    private ReplaySubject<RxBleDeviceMock> discoveredBredrDevicesSubject;
 
     private RxBleClientMock(Builder builder) {
         bondedDevices = builder.bondedDevices;
         connectedPeripherals = builder.connectedPeripherals;
         discoveredDevicesSubject = builder.discoverableDevicesSubject;
+        discoveredBredrDevicesSubject = builder.discoverableBredrDevicesSubject;
     }
 
     @Override
@@ -278,6 +288,17 @@ public class RxBleClientMock extends RxBleClient {
         for (Object device : rxBleDevices) {
             if (((RxBleDevice) device).getMacAddress().equals(macAddress)) {
                 return (RxBleDevice) device;
+            }
+        }
+        throw new IllegalStateException("Mock is not configured for a given mac address. Use Builder#addDevice method.");
+    }
+
+    @Override
+    public RxBleDevice getBredrDevice(@NonNull String macAddress) {
+        Object[] rxBredrDevices = discoveredBredrDevicesSubject.getValues();
+        for (Object bredrDevice : rxBredrDevices) {
+            if (((RxBleDevice) bredrDevice).getIsBredr() && ((RxBleDevice) bredrDevice).getMacAddress().equals(macAddress)) {
+                return (RxBleDevice) bredrDevice;
             }
         }
         throw new IllegalStateException("Mock is not configured for a given mac address. Use Builder#addDevice method.");
@@ -438,6 +459,13 @@ public class RxBleClientMock extends RxBleClient {
     @Override
     public String[] getRecommendedScanRuntimePermissions() {
         return new String[0];
+    }
+
+    @Override
+    public Observable<RxBleDevice> scanBredrDevices() {
+        return discoveredBredrDevicesSubject
+                .filter(RxBleDeviceMock::getIsBredr)
+                .map(rxBleDeviceMock -> rxBleDeviceMock);
     }
 
     @Override

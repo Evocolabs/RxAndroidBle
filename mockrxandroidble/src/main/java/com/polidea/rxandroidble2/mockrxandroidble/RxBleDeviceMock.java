@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -52,17 +53,20 @@ public class RxBleDeviceMock implements RxBleDevice {
     private List<UUID> advertisedUUIDs;
     private BluetoothDevice bluetoothDevice;
     private AtomicBoolean isConnected = new AtomicBoolean(false);
+    private final Boolean isBredr;
 
     private RxBleDeviceMock(String name,
                             String macAddress,
                             @Nullable BluetoothDevice bluetoothDevice,
-                            RxBleConnectionMock connectionMock) {
+                            RxBleConnectionMock connectionMock,
+                            boolean isBredr) {
         this.name = name;
         this.macAddress = macAddress;
         this.rssi = connectionMock.getRssi();
         this.advertisedUUIDs = connectionMock.getServiceUuids();
         this.bluetoothDevice = bluetoothDevice;
         this.rxBleConnection = connectionMock;
+        this.isBredr = isBredr;
         connectionMock.setDeviceMock(this);
     }
 
@@ -72,6 +76,7 @@ public class RxBleDeviceMock implements RxBleDevice {
                            Integer rssi,
                            RxBleDeviceServices rxBleDeviceServices,
                            Map<UUID, Observable<byte[]>> characteristicNotificationSources,
+                           Boolean isBredr,
                            @Nullable BluetoothDevice bluetoothDevice) {
         this(
                 name,
@@ -84,8 +89,9 @@ public class RxBleDeviceMock implements RxBleDevice {
                         new HashMap<UUID, RxBleCharacteristicReadCallback>(),
                         new HashMap<UUID, RxBleCharacteristicWriteCallback>(),
                         new HashMap<UUID, Map<UUID, RxBleDescriptorReadCallback>>(),
-                        new HashMap<UUID, Map<UUID, RxBleDescriptorWriteCallback>>())
-                );
+                        new HashMap<UUID, Map<UUID, RxBleDescriptorWriteCallback>>()),
+                isBredr
+        );
         this.legacyScanRecord = scanRecord;
     }
 
@@ -93,13 +99,15 @@ public class RxBleDeviceMock implements RxBleDevice {
                            String macAddress,
                            ScanRecord scanRecord,
                            @Nullable BluetoothDevice bluetoothDevice,
-                           RxBleConnectionMock connectionMock
+                           RxBleConnectionMock connectionMock,
+                           Boolean isBredr
     ) {
         this(
                 name,
                 macAddress,
                 bluetoothDevice,
-                connectionMock
+                connectionMock,
+                isBredr
         );
         this.scanRecord = scanRecord;
     }
@@ -111,6 +119,7 @@ public class RxBleDeviceMock implements RxBleDevice {
         private byte[] legacyScanRecord;
         private ScanRecord scanRecord;
         private BluetoothDevice bluetoothDevice;
+        private Boolean isBredr = false;
         RxBleConnectionMock connectionMock;
         RxBleConnectionMock.Builder connectionMockBuilder;
 
@@ -129,8 +138,9 @@ public class RxBleDeviceMock implements RxBleDevice {
          * Create the {@link RxBleDeviceMock} instance using the configured values.
          */
         public RxBleDevice build() {
-            if (this.deviceMacAddress == null) throw new IllegalStateException("DeviceMacAddress required."
-                    + " DeviceBuilder#deviceMacAddress should be called.");
+            if (this.deviceMacAddress == null)
+                throw new IllegalStateException("DeviceMacAddress required."
+                        + " DeviceBuilder#deviceMacAddress should be called.");
             if (this.scanRecord == null && this.legacyScanRecord == null)
                 throw new IllegalStateException("ScanRecord required. DeviceBuilder#scanRecord should be called.");
 
@@ -143,6 +153,7 @@ public class RxBleDeviceMock implements RxBleDevice {
                         connMock.getRssi(),
                         connMock.getRxBleDeviceServices(),
                         connMock.getCharacteristicNotificationSources(),
+                        isBredr,
                         bluetoothDevice);
                 for (UUID service : connMock.getServiceUuids()) {
                     rxBleDeviceMock.addAdvertisedUUID(service);
@@ -153,8 +164,9 @@ public class RxBleDeviceMock implements RxBleDevice {
                     deviceMacAddress,
                     scanRecord,
                     bluetoothDevice,
-                    connMock
-                    );
+                    connMock,
+                    isBredr
+            );
         }
 
         /**
@@ -164,7 +176,7 @@ public class RxBleDeviceMock implements RxBleDevice {
          * @param characteristics characteristics that the service should report. Use {@link RxBleClientMock.CharacteristicsBuilder} to
          *                        create them.
          * @deprecated Use {@link #connection(RxBleConnectionMock connectionMock)} and
-         *             {@link RxBleConnectionMock.Builder#addService(UUID uuid, List characteristics)}
+         * {@link RxBleConnectionMock.Builder#addService(UUID uuid, List characteristics)}
          */
         @Deprecated
         public Builder addService(@NonNull UUID uuid, @NonNull List<BluetoothGattCharacteristic> characteristics) {
@@ -203,7 +215,7 @@ public class RxBleDeviceMock implements RxBleDevice {
          * @param characteristicUUID UUID of the characteristic that will be observed for notifications
          * @param sourceObservable   Observable that will be subscribed to in order to receive characteristic change notifications
          * @deprecated Use {@link #connectionMock} and
-         *             {@link RxBleConnectionMock.Builder#notificationSource(UUID characteristicUUID, Observable sourceObservable)}
+         * {@link RxBleConnectionMock.Builder#notificationSource(UUID characteristicUUID, Observable sourceObservable)}
          */
         @Deprecated
         public Builder notificationSource(@NonNull UUID characteristicUUID, @NonNull Observable<byte[]> sourceObservable) {
@@ -213,6 +225,7 @@ public class RxBleDeviceMock implements RxBleDevice {
 
         /**
          * Set a rssi that will be reported. Calling this method is required.
+         *
          * @deprecated Use {@link #connectionMock} and {@link RxBleConnectionMock.Builder#rssi(int rssi)}
          */
         @Deprecated
@@ -242,6 +255,14 @@ public class RxBleDeviceMock implements RxBleDevice {
          */
         public Builder connection(@NonNull RxBleConnectionMock connectionMock) {
             this.connectionMock = connectionMock;
+            return this;
+        }
+
+        /**
+         * Set if the device is Bredr. Calling this method is not required. Default is false
+         */
+        public Builder isBredr(Boolean isBredr) {
+            this.isBredr = isBredr;
             return this;
         }
     }
@@ -288,6 +309,11 @@ public class RxBleDeviceMock implements RxBleDevice {
         return establishConnection(autoConnect);
     }
 
+    @Override
+    public Single<Boolean> createBond() {
+        throw new UnsupportedOperationException("Mock doesn't support createBond Operation");
+    }
+
     private Observable<RxBleConnection> emitConnectionWithoutCompleting() {
         connectionSubject = ReplaySubject.createWithSize(1);
         connectionSubject.onNext(rxBleConnection);
@@ -328,6 +354,11 @@ public class RxBleDeviceMock implements RxBleDevice {
     }
 
     @Override
+    public Boolean getA2dpConnected() {
+        return false;
+    }
+
+    @Override
     public String getName() {
         return name;
     }
@@ -341,7 +372,7 @@ public class RxBleDeviceMock implements RxBleDevice {
     }
 
     public Boolean getIsBredr() {
-        return false;
+        return isBredr;
     }
 
     public ScanRecord getScanRecord() {
