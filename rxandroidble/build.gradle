@@ -4,12 +4,11 @@ apply plugin: 'groovyx.android'
 apply from: rootProject.file('gradle/gradle-mvn-config.gradle')
 apply plugin: 'maven-publish'
 
-
 def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties"))) //Set env variable GPR_USER & GPR_API_KEY if not adding a properties file
 
 def getVersionName = { ->
-    return "1.0.11" // Replace with version Name
+    return rootProject.ext.publishingVersionName// Replace with version Name
 }
 
 def getArtificatId = { ->
