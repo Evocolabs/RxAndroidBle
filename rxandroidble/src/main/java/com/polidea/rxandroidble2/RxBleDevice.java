@@ -139,4 +139,6 @@ public interface RxBleDevice {
     BluetoothDevice getBluetoothDevice();
 
     Boolean getA2dpConnected();
+
+    Boolean getHeadsetConnected();
 }
