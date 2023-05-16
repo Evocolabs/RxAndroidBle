@@ -1,6 +1,5 @@
 package com.polidea.rxandroidble2.bredr;
 
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.os.DeadObjectException;
 
@@ -54,9 +53,9 @@ public class BredrScanOperation extends QueueOperation<RxBleDevice> {
         return new BredrScanCallback() {
 
             @Override
-            public void onScanned(BluetoothDevice device, BluetoothClass classes) {
+            public void onScanned(BluetoothDevice device) {
                 RxBleDevice bleDevice = rxBleDeviceProvider.getBleDevice(
-                        device.getAddress(), classes.getMajorDeviceClass() != BluetoothClass.Device.Major.UNCATEGORIZED);
+                        device.getAddress(), true);
                 emitter.onNext(bleDevice);
             }
 

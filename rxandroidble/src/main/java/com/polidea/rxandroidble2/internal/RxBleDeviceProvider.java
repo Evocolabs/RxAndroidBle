@@ -26,16 +26,16 @@ public class RxBleDeviceProvider {
     }
 
     public RxBleDevice getBleDevice(String macAddress, Boolean isBredr) {
-        final DeviceComponent cachedDeviceComponent = cachedDeviceComponents.get(macAddress);
+        String isBredrPrefix = isBredr ? "BREDR@" : "BLE@";
+        String macAddressWithPrefix = isBredrPrefix + macAddress;
 
+        final DeviceComponent cachedDeviceComponent = cachedDeviceComponents.get(macAddressWithPrefix);
         if (cachedDeviceComponent != null) {
             return cachedDeviceComponent.provideDevice();
         }
 
         synchronized (cachedDeviceComponents) {
-            String isBredrPrefix = isBredr ? "BREDR@" : "BLE@";
-            final DeviceComponent secondCheckRxBleDevice = cachedDeviceComponents.get(isBredrPrefix + macAddress);
-
+            final DeviceComponent secondCheckRxBleDevice = cachedDeviceComponents.get(macAddressWithPrefix);
             if (secondCheckRxBleDevice != null) {
                 return secondCheckRxBleDevice.provideDevice();
             }
@@ -45,7 +45,7 @@ public class RxBleDeviceProvider {
                     .isBredr(isBredr)
                     .build();
             final RxBleDevice newRxBleDevice = deviceComponent.provideDevice();
-            cachedDeviceComponents.put(macAddress, deviceComponent);
+            cachedDeviceComponents.put(macAddressWithPrefix, deviceComponent);
             return newRxBleDevice;
         }
     }

@@ -1,7 +1,6 @@
 package com.polidea.rxandroidble2.bredr;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,12 +35,12 @@ public class BredrScanResultListener {
                     // Get the BluetoothDevice object from the Intent
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     // Add the name and address to an array adapter to show in a Toast
-                    BluetoothClass btClass = intent.getParcelableExtra(BluetoothDevice.EXTRA_CLASS);
-                    int majorClass = btClass.getMajorDeviceClass();
                     RxBleLog.i("Bredr Scan- %s, %s", device.getName(), device.getAddress());
-                    RxBleLog.i("Bluetooth Major class: %d", majorClass);
+                    if (device.getType() != BluetoothDevice.DEVICE_TYPE_CLASSIC && device.getType() != BluetoothDevice.DEVICE_TYPE_DUAL) {
+                        return;
+                    }
                     // Only UnCategorized Device should be labeled as BLE device.
-                    cb.onScanned(device, btClass);
+                    cb.onScanned(device);
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     cb.onScanStop();
                 }
