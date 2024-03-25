@@ -2,6 +2,7 @@
 .gradle
 local.properties
 github.properties
+aws.properties
 *.iml
 /build
 dagger-compiler-shadow/build

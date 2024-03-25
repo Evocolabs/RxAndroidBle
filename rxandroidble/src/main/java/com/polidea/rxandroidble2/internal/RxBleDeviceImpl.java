@@ -3,12 +3,7 @@ package com.polidea.rxandroidble2.internal;
 import static com.polidea.rxandroidble2.internal.DeviceModule.IS_BREDR;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothA2dp;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothHeadset;
-import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 
 import androidx.annotation.Nullable;
 
@@ -21,7 +16,6 @@ import com.polidea.rxandroidble2.exceptions.BleAlreadyConnectedException;
 import com.polidea.rxandroidble2.internal.connection.Connector;
 import com.polidea.rxandroidble2.internal.logger.LoggerUtil;
 
-import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,15 +34,11 @@ class RxBleDeviceImpl implements RxBleDevice {
     private final BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay;
     final AtomicBoolean isConnected = new AtomicBoolean(false);
     final Boolean isBredr;
-    BluetoothA2dp a2dpProfile;
-    BluetoothHeadset headsetProfile;
 
     @Inject
     RxBleDeviceImpl(
             BluetoothDevice bluetoothDevice,
-            @Nullable BluetoothAdapter bluetoothAdapter,
             Connector connector,
-            Context context,
             BehaviorRelay<RxBleConnection.RxBleConnectionState> connectionStateRelay,
             @Named(IS_BREDR) Boolean isBredr
     ) {
@@ -56,43 +46,6 @@ class RxBleDeviceImpl implements RxBleDevice {
         this.connector = connector;
         this.connectionStateRelay = connectionStateRelay;
         this.isBredr = isBredr;
-
-        if (bluetoothAdapter == null) {
-            return;
-        }
-
-        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
-            @Override
-            public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                if (profile == BluetoothProfile.A2DP) {
-                    a2dpProfile = (BluetoothA2dp) proxy;
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(int profile) {
-                if (profile == BluetoothProfile.A2DP) {
-                    a2dpProfile = null;
-                }
-            }
-        }, BluetoothProfile.A2DP);
-
-        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
-            @Override
-            public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                if (profile == BluetoothProfile.HEADSET) {
-                    headsetProfile = (BluetoothHeadset) proxy;
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(int profile) {
-                if (profile == BluetoothProfile.HEADSET) {
-                    headsetProfile = null;
-                }
-            }
-        }, BluetoothProfile.HEADSET);
-        RxBleLog.i("isBredr: %s", this.isBredr.toString());
     }
 
     @Override
@@ -126,6 +79,7 @@ class RxBleDeviceImpl implements RxBleDevice {
         return establishConnection(options);
     }
 
+    @Override
     public Observable<RxBleConnection> establishConnection(final ConnectionSetup options) {
         return Observable.defer(new Callable<ObservableSource<RxBleConnection>>() {
             @Override
@@ -147,18 +101,18 @@ class RxBleDeviceImpl implements RxBleDevice {
 
     @SuppressLint("MissingPermission")
     public Single<Boolean> createBond() {
-        if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED && !getHeadsetConnected()) {
-            // This [createBond] method is usually called when device is discovered by bredr scanner.
-            // it's weird that sometimes a already paired device didn't connect to classic bluetooth
-            // but is scanned over [BluetoothAdaper.startDiscovery]. It might happen when the device
-            // it self removed historical bonding information and thus need a re-bond.
-            try {
-                Method method = bluetoothDevice.getClass().getMethod("removeBond", (Class[]) null);
-                method.invoke(bluetoothDevice, (Object[]) null);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+//        if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED && !getHeadsetConnected()) {
+//            // This [createBond] method is usually called when device is discovered by bredr scanner.
+//            // it's weird that sometimes a already paired device didn't connect to classic bluetooth
+//            // but is scanned over [BluetoothAdaper.startDiscovery]. It might happen when the device
+//            // it self removed historical bonding information and thus need a re-bond.
+//            try {
+//                Method method = bluetoothDevice.getClass().getMethod("removeBond", (Class[]) null);
+//                method.invoke(bluetoothDevice, (Object[]) null);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
         return Single.defer(() -> connector.createBond());
     }
 
@@ -181,25 +135,6 @@ class RxBleDeviceImpl implements RxBleDevice {
     @Override
     public BluetoothDevice getBluetoothDevice() {
         return bluetoothDevice;
-    }
-
-    /**
-     * Not valid to check bredr connection state after Orka Two, use {@link #getHeadsetConnected()} instead.
-     */
-    @SuppressLint("MissingPermission")
-    @Deprecated
-    @Override
-    public Boolean getA2dpConnected() {
-        return a2dpProfile.getConnectionState(bluetoothDevice) == BluetoothA2dp.STATE_CONNECTED;
-    }
-
-    /**
-     * Check whether the device's bredr is connected.
-     */
-    @SuppressLint("MissingPermission")
-    @Override
-    public Boolean getHeadsetConnected() {
-        return headsetProfile.getConnectionState(bluetoothDevice) == BluetoothHeadset.STATE_CONNECTED;
     }
 
     @Override

@@ -1,0 +1,2 @@
+CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain orka --domain-owner 085552102522 --region us-west-2 --query authorizationToken --output text`
+echo "token=$CODEARTIFACT_AUTH_TOKEN" > aws.properties
